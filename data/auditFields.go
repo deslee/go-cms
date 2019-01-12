@@ -22,7 +22,12 @@ func CreateAuditFields(ctx context.Context, previous *AuditFields) AuditFields {
 		now           = time.Now().UTC().Format(time.RFC3339)
 	)
 
-	modifier = "System" // TODO
+	userId := UserIdFromContext(ctx)
+	if userId == nil {
+		modifier = "Unknown"
+	} else {
+		modifier = *userId
+	}
 
 	if previous != nil {
 		createdAt = previous.CreatedAt

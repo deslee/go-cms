@@ -1,6 +1,8 @@
 package data
 
-import "github.com/google/uuid"
+import (
+	"github.com/google/uuid"
+)
 
 func die(err error) {
 	if err != nil {

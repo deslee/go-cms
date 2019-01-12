@@ -51,12 +51,20 @@ type UserResult struct {
 	Data *User `json:"data"`
 }
 
-func UserFromContext(ctx context.Context, db *gorm.DB) (*User, error) {
+func UserIdFromContext(ctx context.Context) *string {
 	userId, ok := ctx.Value(UserContextKey("sub")).(string)
 	if !ok || len(userId) == 0 {
+		return nil
+	}
+	return &userId
+}
+
+func UserFromContext(ctx context.Context, db *gorm.DB) (*User, error) {
+	userId := UserIdFromContext(ctx)
+	if userId == nil {
 		return nil, nil
 	}
-	return getUserById(ctx, db, userId)
+	return getUserById(ctx, db, *userId)
 }
 
 func (user User) Sites(ctx context.Context, db *gorm.DB) ([]Site, error) {
@@ -86,7 +94,6 @@ func Register(ctx context.Context, db *gorm.DB, registration RegisterInput) (Use
 	}
 
 	id := generateId()
-	auditFields := CreateAuditFields(ctx, nil)
 
 	user := User{
 		ID:          id,
@@ -94,20 +101,18 @@ func Register(ctx context.Context, db *gorm.DB, registration RegisterInput) (Use
 		Password:    registration.Password,
 		Salt:        string(hash),
 		Data:        registration.Data,
-		AuditFields: auditFields,
+		AuditFields: CreateAuditFields(ctx, nil),
 	}
 
 	err = db.Create(user).Error
 	die(err)
 
+	createdUser, err := getUserById(ctx, db, id)
+	die(err)
+
 	return UserResult{
 		GenericResult: GenericSuccess(),
-		Data: &User{
-			ID:          id,
-			Email:       registration.Email,
-			Data:        registration.Data,
-			AuditFields: auditFields,
-		},
+		Data:          createdUser,
 	}, nil
 }
 
@@ -166,14 +171,13 @@ func getUserById(ctx context.Context, db *gorm.DB, id string) (*User, error) {
 	return &user, nil
 }
 
-func ParseTokenToContext(tokenString string, ctx context.Context) (context.Context, error) {
+func ParseTokenToContext(ctx context.Context, tokenString string) (context.Context, error) {
 	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
 		// Don't forget to validated the alg is what you expect:
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
 		}
 
-		// hmacSampleSecret is a []byte containing your secret, e.g. []byte("my_secret_key")
 		return []byte(SigningKey), nil
 	})
 
@@ -203,4 +207,19 @@ func generateToken(user *User) string {
 	tokenString, err := token.SignedString([]byte(SigningKey))
 	die(err)
 	return tokenString
+}
+
+func assertUserHasAccessToSite(ctx context.Context, db *gorm.DB, siteId string) bool {
+	userId := UserIdFromContext(ctx)
+	if userId == nil {
+		return false
+	}
+
+	var count int
+	err := db.Model(&SiteUser{}).Where("UserId=? AND SiteId=?", userId, siteId).Count(&count).Error
+	die(err)
+	if count == 0 {
+		return false
+	}
+	return true
 }
