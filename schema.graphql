@@ -1,0 +1,130 @@
+scalar StringifiedJsonObject
+
+type Site {
+    id: ID!
+    name: String!
+    data: StringifiedJsonObject!
+    assets: [Asset]!
+    groups: [Group]!
+    items: [Item]!
+    createdAt: String!
+    createdBy: String!
+    lastUpdatedAt: String!
+    lastUpdatedBy: String!
+}
+
+type Asset {
+    id: ID!
+    type: String!
+    state: String!
+    fileName: String!
+    extension: String!
+    items: [Item]!
+    createdAt: String!
+    createdBy: String!
+    lastUpdatedAt: String!
+    lastUpdatedBy: String!
+}
+
+type Group {
+    name: String!
+    items: [Item]!
+}
+
+type Item  {
+    id: ID!
+    data: StringifiedJsonObject!
+    groups: [Group]!
+    createdAt: String!
+    createdBy: String!
+    lastUpdatedAt: String!
+    lastUpdatedBy: String!
+}
+
+type User {
+    id: ID!
+    email: String!
+    data: StringifiedJsonObject!
+    sites: [Site]!
+}
+
+input UserInput {
+    id: String!
+    email: String!
+    data: StringifiedJsonObject!
+}
+
+type UserResult {
+    data: User
+    errorMessage: String
+    success: Boolean!
+}
+
+input ItemInput {
+    id: String
+    type: String!
+    data: StringifiedJsonObject!
+    groups: [String!]!
+}
+
+type ItemResult {
+    data: Item
+    errorMessage: String
+    success: Boolean!
+}
+
+input SiteInput {
+    id: String
+    name: String!
+    data: StringifiedJsonObject!
+}
+
+type SiteResult {
+    data: Site
+    errorMessage: String
+    success: Boolean!
+}
+
+type LoginResult {
+    data: User
+    errorMessage: String
+    success: Boolean!
+    token: String
+}
+
+input LoginInput {
+    email: String!
+    password: String!
+}
+
+input RegisterInput {
+    email: String!
+    data: StringifiedJsonObject!
+    password: String!
+}
+
+type GenericResult {
+    errorMessage: String
+    success: Boolean!
+}
+
+type Query {
+    asset(assetId: String!): Asset
+    items(siteId: String!): [Item]!
+    item(itemId: String!): Item
+    me: User
+    site(siteId: String!): Site
+    sites: [Site]!
+}
+
+type Mutation {
+    addUserToSite(userId: String!, siteId: String!): GenericResult!
+    deleteAsset(assetId: String!): GenericResult!
+    deleteItem(itemId: String!): GenericResult!
+    deleteSite(siteId: String!): GenericResult!
+    login(login: LoginInput!): LoginResult!
+    register(registration: RegisterInput!): UserResult!
+    updateUser(user: UserInput!): UserResult!
+    upsertItem(item: ItemInput!, siteId: String!): ItemResult!
+    upsertSite(site: SiteInput!): SiteResult!
+}

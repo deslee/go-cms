@@ -1,0 +1,25 @@
+# .gqlgen.yml example
+#
+# Refer to https://gqlgen.com/config/
+# for detailed .gqlgen.yml documentation.
+
+schema:
+- schema.graphql
+exec:
+  filename: generated.go
+model:
+  filename: models_gen.go
+resolver:
+  filename: resolver.go
+  type: Resolver
+models:
+  Site:
+    model: github.com/deslee/cms/database/models.Site
+  Item:
+    model: github.com/deslee/cms/database/models.Item
+  Group:
+    model: github.com/deslee/cms/database/models.Group
+  Asset:
+    model: github.com/deslee/cms/database/models.Asset
+  User:
+    model: github.com/deslee/cms/database/models.User
