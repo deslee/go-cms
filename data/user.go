@@ -2,23 +2,24 @@ package data
 
 import (
 	"context"
-	"database/sql"
 	"fmt"
 	"github.com/dgrijalva/jwt-go"
-	"github.com/google/uuid"
+	"github.com/jinzhu/gorm"
 	"golang.org/x/crypto/bcrypt"
 	"time"
 )
 
 const SigningKey = "abcdefgjasiojdaoidjabcdefgjasiojdaoidjabcdefsgjasiojdaoidj" // TODO: configure!!
+const UnauthenticatedMsg = "Not Authenticated"
+
 type UserContextKey string
 
 type User struct {
-	ID       string
-	Email    string
-	Password string
-	Salt     string
-	Data     JSONObject
+	ID       string     `gorm:"type:text;primary_key;column:Id"`
+	Email    string     `gorm:"type:text;column:Email"`
+	Password string     `gorm:"type:text;column:Password"`
+	Salt     string     `gorm:"type:text;column:Salt"`
+	Data     JSONObject `gorm:"type:text;column:Data"`
 	AuditFields
 }
 
@@ -50,7 +51,7 @@ type UserResult struct {
 	Data *User `json:"data"`
 }
 
-func UserFromContext(ctx context.Context, db *sql.DB) (*User, error) {
+func UserFromContext(ctx context.Context, db *gorm.DB) (*User, error) {
 	userId, ok := ctx.Value(UserContextKey("sub")).(string)
 	if !ok || len(userId) == 0 {
 		return nil, nil
@@ -58,43 +59,16 @@ func UserFromContext(ctx context.Context, db *sql.DB) (*User, error) {
 	return getUserById(ctx, db, userId)
 }
 
-func (user User) Sites(ctx context.Context, db *sql.DB) ([]Site, error) {
+func (user User) Sites(ctx context.Context, db *gorm.DB) ([]Site, error) {
 	panic("not implemented")
 }
 
-func UpdateUser(ctx context.Context, db *sql.DB, user UserInput) (UserResult, error) {
-	tx, err := db.BeginTx(ctx, nil)
-	if err != nil {
-		panic(err)
-	}
-	defer tx.Rollback()
-	existingUser, err := getUserById(ctx, db, user.ID)
-	if err != nil {
-		panic(err)
-	}
+func UpdateUser(ctx context.Context, db *gorm.DB, user UserInput) (UserResult, error) {
+	existingUser, err := getUserByEmail(ctx, db, user.Email)
+	die(err)
+
 	if existingUser == nil {
-		return UserResult{GenericResult: GenericErrorMessage(fmt.Sprintf("User %s does not exist", user.ID))}, nil
-	}
-
-	auditFields := CreateAuditFields(ctx, &existingUser.AuditFields)
-
-	executeSql(tx, `UPDATE Users SET Email=?, Data=?, CreatedBy=?, LastUpdatedBy=?, CreatedAt=?, LastUpdatedAt=? WHERE Id=?`,
-		user.Email,
-		user.Data,
-		auditFields.CreatedBy,
-		auditFields.LastUpdatedBy,
-		auditFields.CreatedAt,
-		auditFields.LastUpdatedAt,
-	)
-
-	err = tx.Commit()
-	if err != nil {
-		panic(err)
-	}
-
-	existingUser, err = getUserById(ctx, db, user.ID)
-	if err != nil {
-		panic(err)
+		return UserResult{GenericResult: GenericErrorMessage(fmt.Sprintf("User %s not found", user.Email))}, nil
 	}
 
 	return UserResult{
@@ -103,44 +77,29 @@ func UpdateUser(ctx context.Context, db *sql.DB, user UserInput) (UserResult, er
 	}, nil
 }
 
-func Register(ctx context.Context, db *sql.DB, registration RegisterInput) (UserResult, error) {
-	tx, err := db.BeginTx(ctx, nil)
-	if err != nil {
-		panic(err)
-	}
-	defer tx.Rollback()
-
-	newUuid, err := uuid.NewRandom()
-	if err != nil {
-		panic(err)
-	}
-
+func Register(ctx context.Context, db *gorm.DB, registration RegisterInput) (UserResult, error) {
 	hash, err := bcrypt.GenerateFromPassword([]byte(registration.Password), bcrypt.DefaultCost)
-	if err != nil {
-		panic(err)
+	die(err)
+
+	if existingUser, _ := getUserByEmail(ctx, db, registration.Email); existingUser != nil {
+		return UserResult{GenericResult: GenericErrorMessage(fmt.Sprintf("User %s already exists", registration.Email))}, nil
 	}
 
-	id := newUuid.String()
+	id := generateId()
 	auditFields := CreateAuditFields(ctx, nil)
 
-	executeSql(
-		tx,
-		`INSERT INTO USERS (Id, Email, Password, Salt, Data, CreatedBy, LastUpdatedBy, CreatedAt, LastUpdatedAt) VALUES (?,?,?,?,?,?,?,?,?)`,
-		id,
-		registration.Email,
-		registration.Password,
-		string(hash),
-		registration.Data,
-		auditFields.CreatedBy,
-		auditFields.LastUpdatedBy,
-		auditFields.CreatedAt,
-		auditFields.LastUpdatedAt,
-	)
-
-	err = tx.Commit()
-	if err != nil {
-		panic(err)
+	user := User{
+		ID:          id,
+		Email:       registration.Email,
+		Password:    registration.Password,
+		Salt:        string(hash),
+		Data:        registration.Data,
+		AuditFields: auditFields,
 	}
+
+	err = db.Create(user).Error
+	die(err)
+
 	return UserResult{
 		GenericResult: GenericSuccess(),
 		Data: &User{
@@ -152,11 +111,9 @@ func Register(ctx context.Context, db *sql.DB, registration RegisterInput) (User
 	}, nil
 }
 
-func Login(ctx context.Context, db *sql.DB, login LoginInput) (LoginResult, error) {
+func Login(ctx context.Context, db *gorm.DB, login LoginInput) (LoginResult, error) {
 	user, err := getUserByEmail(ctx, db, login.Email)
-	if err != nil {
-		panic(err)
-	}
+	die(err)
 	if user == nil {
 		return LoginResult{
 			GenericResult: GenericErrorMessage("Failed to login"),
@@ -183,47 +140,30 @@ func Login(ctx context.Context, db *sql.DB, login LoginInput) (LoginResult, erro
 	}, nil
 }
 
-func AddUserToSite(ctx context.Context, db *sql.DB, userId string, siteId string) (GenericResult, error) {
-	panic("not implemented")
-}
-
-func getUserByEmail(ctx context.Context, db *sql.DB, email string) (ret *User, err error) {
+func getUserByEmail(ctx context.Context, db *gorm.DB, email string) (*User, error) {
 	user := User{}
-	err = db.QueryRowContext(
-		ctx,
-		`SELECT Id, Email, Password, Salt, Data, CreatedBy, LastUpdatedBy, CreatedAt, LastUpdatedAt from Users where Email = ?`, email,
-	).Scan(
-		&user.ID, &user.Email, &user.Password, &user.Salt, &user.Data, &user.CreatedBy, &user.LastUpdatedBy, &user.CreatedAt, &user.LastUpdatedAt,
-	)
 
-	if err == sql.ErrNoRows {
-		err = nil
-		ret = nil
-	} else if err == nil {
-		ret = &user
+	if err := db.Where("Email = ?", email).First(&user).Error; err != nil {
+		if gorm.IsRecordNotFoundError(err) {
+			return nil, nil
+		}
+		return nil, err
 	}
 
-	return
+	return &user, nil
 }
 
-func getUserById(ctx context.Context, db *sql.DB, id string) (ret *User, err error) {
-	ret = &User{}
-	err = db.QueryRowContext(
-		ctx,
-		`SELECT Id, Email, Password, Salt, Data, CreatedBy, LastUpdatedBy, CreatedAt, LastUpdatedAt from Users where Id = ?`, id,
-	).Scan(
-		&ret.ID, &ret.Email, &ret.Password, &ret.Salt, &ret.Data, &ret.CreatedBy, &ret.LastUpdatedBy, &ret.CreatedAt, &ret.LastUpdatedAt,
-	)
+func getUserById(ctx context.Context, db *gorm.DB, id string) (*User, error) {
+	user := User{}
 
-	if err == sql.ErrNoRows {
-		err = nil
+	if err := db.Where("Id = ?", id).First(&user).Error; err != nil {
+		if gorm.IsRecordNotFoundError(err) {
+			return nil, nil
+		}
+		return nil, err
 	}
 
-	if err != nil {
-		ret = nil
-	}
-
-	return
+	return &user, nil
 }
 
 func ParseTokenToContext(tokenString string, ctx context.Context) (context.Context, error) {
@@ -261,8 +201,6 @@ func generateToken(user *User) string {
 	})
 
 	tokenString, err := token.SignedString([]byte(SigningKey))
-	if err != nil {
-		panic(err)
-	}
+	die(err)
 	return tokenString
 }

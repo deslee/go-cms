@@ -1,0 +1,8 @@
+package data
+
+type ItemGroups struct {
+	ItemID  string `gorm:"type:text;primary_key;column=ItemId"`
+	GroupID string `gorm:"type:text;primary_key;column=GroupId"`
+	Order   int    `gorm:"type:integer;column=Order"`
+	AuditFields
+}

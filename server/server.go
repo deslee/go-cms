@@ -1,10 +1,10 @@
 package main
 
 import (
-	"database/sql"
 	"github.com/99designs/gqlgen/handler"
 	"github.com/deslee/cms"
 	"github.com/deslee/cms/data"
+	"github.com/jinzhu/gorm"
 	_ "github.com/mattn/go-sqlite3"
 	"log"
 	"net/http"
@@ -20,7 +20,7 @@ func main() {
 		port = defaultPort
 	}
 
-	db, err := sql.Open("sqlite3", "database.sqlite?_loc=auto")
+	db, err := gorm.Open("sqlite3", "database.sqlite")
 	if err != nil {
 		panic(err)
 	}

@@ -6,10 +6,10 @@ import (
 )
 
 type AuditFields struct {
-	CreatedAt     string
-	CreatedBy     string
-	LastUpdatedAt string
-	LastUpdatedBy string
+	CreatedAt     string `gorm:"type:text;column:CreatedAt"`
+	CreatedBy     string `gorm:"type:text;column:CreatedBy"`
+	LastUpdatedAt string `gorm:"type:text;column:LastUpdatedAt"`
+	LastUpdatedBy string `gorm:"type:text;column:LastUpdatedBy"`
 }
 
 func CreateAuditFields(ctx context.Context, previous *AuditFields) AuditFields {

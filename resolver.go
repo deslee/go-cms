@@ -2,14 +2,14 @@ package cms
 
 import (
 	"context"
-	"database/sql"
 	"github.com/deslee/cms/data"
+	"github.com/jinzhu/gorm"
 	"log"
 	"runtime/debug"
 )
 
 type Resolver struct {
-	*sql.DB
+	*gorm.DB
 }
 
 func (r *Resolver) Asset() AssetResolver {
@@ -55,7 +55,7 @@ func (r *itemResolver) Groups(ctx context.Context, obj *data.Item) ([]data.Group
 type mutationResolver struct{ *Resolver }
 
 func (r *mutationResolver) AddUserToSite(ctx context.Context, userId string, siteId string) (res data.GenericResult, err error) {
-	defer func(){
+	defer func() {
 		if r := recover(); r != nil {
 			log.Printf("%s %s", r, debug.Stack())
 			res = data.GenericError()
@@ -65,7 +65,7 @@ func (r *mutationResolver) AddUserToSite(ctx context.Context, userId string, sit
 	return res, err
 }
 func (r *mutationResolver) DeleteAsset(ctx context.Context, assetId string) (res data.GenericResult, err error) {
-	defer func(){
+	defer func() {
 		if r := recover(); r != nil {
 			log.Printf("%s %s", r, debug.Stack())
 			res = data.GenericError()
@@ -75,7 +75,7 @@ func (r *mutationResolver) DeleteAsset(ctx context.Context, assetId string) (res
 	return res, err
 }
 func (r *mutationResolver) DeleteItem(ctx context.Context, itemId string) (res data.GenericResult, err error) {
-	defer func(){
+	defer func() {
 		if r := recover(); r != nil {
 			log.Printf("%s %s", r, debug.Stack())
 			res = data.GenericError()
@@ -85,7 +85,7 @@ func (r *mutationResolver) DeleteItem(ctx context.Context, itemId string) (res d
 	return res, err
 }
 func (r *mutationResolver) DeleteSite(ctx context.Context, siteId string) (res data.GenericResult, err error) {
-	defer func(){
+	defer func() {
 		if r := recover(); r != nil {
 			log.Printf("%s %s", r, debug.Stack())
 			res = data.GenericError()
@@ -95,7 +95,7 @@ func (r *mutationResolver) DeleteSite(ctx context.Context, siteId string) (res d
 	return res, err
 }
 func (r *mutationResolver) Login(ctx context.Context, login data.LoginInput) (res data.LoginResult, err error) {
-	defer func(){
+	defer func() {
 		if r := recover(); r != nil {
 			log.Printf("%s %s", r, debug.Stack())
 			res = data.LoginResult{GenericResult: data.GenericError()}
@@ -105,7 +105,7 @@ func (r *mutationResolver) Login(ctx context.Context, login data.LoginInput) (re
 	return res, err
 }
 func (r *mutationResolver) Register(ctx context.Context, registration data.RegisterInput) (res data.UserResult, err error) {
-	defer func(){
+	defer func() {
 		if r := recover(); r != nil {
 			log.Printf("%s %s", r, debug.Stack())
 			res = data.UserResult{GenericResult: data.GenericError()}
@@ -115,7 +115,7 @@ func (r *mutationResolver) Register(ctx context.Context, registration data.Regis
 	return res, err
 }
 func (r *mutationResolver) UpdateUser(ctx context.Context, user data.UserInput) (res data.UserResult, err error) {
-	defer func(){
+	defer func() {
 		if r := recover(); r != nil {
 			log.Printf("%s %s", r, debug.Stack())
 			res = data.UserResult{GenericResult: data.GenericError()}
@@ -125,7 +125,7 @@ func (r *mutationResolver) UpdateUser(ctx context.Context, user data.UserInput) 
 	return res, err
 }
 func (r *mutationResolver) UpsertItem(ctx context.Context, item data.ItemInput, siteId string) (res data.ItemResult, err error) {
-	defer func(){
+	defer func() {
 		if r := recover(); r != nil {
 			log.Printf("%s %s", r, debug.Stack())
 			res = data.ItemResult{GenericResult: data.GenericError()}
@@ -135,7 +135,7 @@ func (r *mutationResolver) UpsertItem(ctx context.Context, item data.ItemInput, 
 	return res, err
 }
 func (r *mutationResolver) UpsertSite(ctx context.Context, site data.SiteInput) (res data.SiteResult, err error) {
-	defer func(){
+	defer func() {
 		if r := recover(); r != nil {
 			log.Printf("%s %s", r, debug.Stack())
 			res = data.SiteResult{GenericResult: data.GenericError()}
