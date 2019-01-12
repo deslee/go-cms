@@ -28,22 +28,22 @@ type ItemResult struct {
 	Success      bool    `json:"success"`
 }
 
-func GetItems(ctx context.Context, db sql.DB, s string) ([]Item, error) {
+func GetItems(ctx context.Context, db *sql.DB, s string) ([]Item, error) {
 	panic("not implemented")
 }
 
-func GetItem(ctx context.Context, db sql.DB, s string) (*Item, error) {
+func GetItem(ctx context.Context, db *sql.DB, s string) (*Item, error) {
 	panic("not implemented")
 }
 
-func (item Item) Groups(ctx context.Context, db sql.DB) ([]Group, error) {
+func (item Item) Groups(ctx context.Context, db *sql.DB) ([]Group, error) {
 	panic("not implemented")
 }
 
-func UpsertItem(ctx context.Context, db sql.DB, item ItemInput, siteId string) (ItemResult, error) {
+func UpsertItem(ctx context.Context, db *sql.DB, item ItemInput, siteId string) (ItemResult, error) {
 	panic("not implemented")
 }
 
-func DeleteItem(ctx context.Context, db sql.DB, itemId string) (GenericResult, error) {
+func DeleteItem(ctx context.Context, db *sql.DB, itemId string) (GenericResult, error) {
 	panic("not implemented")
 }

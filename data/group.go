@@ -15,7 +15,6 @@ type Group struct {
 	LastUpdatedBy string
 }
 
-func (group Group) Items(context context.Context, db sql.DB) ([]Item, error) {
+func (group Group) Items(context context.Context, db *sql.DB) ([]Item, error) {
 	panic("not implemented")
 }
-

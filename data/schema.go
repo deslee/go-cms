@@ -12,9 +12,8 @@ func CreateTablesAndIndicesIfNotExist(db *sql.DB) {
 		ctx = context.Background()
 	)
 
-
 	// begin the transaction
-	tx,err := db.BeginTx(ctx, nil)
+	tx, err := db.BeginTx(ctx, nil)
 	if err != nil {
 		panic(err)
 	}
@@ -150,7 +149,7 @@ func CreateTablesAndIndicesIfNotExist(db *sql.DB) {
 
 func executeSql(tx *sql.Tx, sql string) {
 	// prepare a statement
-	stmt,err := tx.Prepare(sql)
+	stmt, err := tx.Prepare(sql)
 	if err != nil {
 		panic(err)
 	}

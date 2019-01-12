@@ -18,7 +18,7 @@ type User struct {
 	LastUpdatedBy string
 }
 
-func (user User) Sites(ctx context.Context, db sql.DB) ([]Site, error) {
+func (user User) Sites(ctx context.Context, db *sql.DB) ([]Site, error) {
 	panic("not implemented")
 }
 
@@ -28,10 +28,10 @@ type LoginInput struct {
 }
 
 type LoginResult struct {
-	Data         *User `json:"data"`
-	ErrorMessage *string      `json:"errorMessage"`
-	Success      bool         `json:"success"`
-	Token        *string      `json:"token"`
+	Data         *User   `json:"data"`
+	ErrorMessage *string `json:"errorMessage"`
+	Success      bool    `json:"success"`
+	Token        *string `json:"token"`
 }
 
 type RegisterInput struct {
@@ -47,28 +47,27 @@ type UserInput struct {
 }
 
 type UserResult struct {
-	Data         *User `json:"data"`
-	ErrorMessage *string      `json:"errorMessage"`
-	Success      bool         `json:"success"`
+	Data         *User   `json:"data"`
+	ErrorMessage *string `json:"errorMessage"`
+	Success      bool    `json:"success"`
 }
 
-func UserFromContext(ctx context.Context, db sql.DB) (*User, error) {
+func UserFromContext(ctx context.Context, db *sql.DB) (*User, error) {
 	panic("not implemented")
 }
 
-func UpdateUser(ctx context.Context, db sql.DB, user UserInput) (UserResult, error) {
+func UpdateUser(ctx context.Context, db *sql.DB, user UserInput) (UserResult, error) {
 	panic("not implemented")
 }
 
-func Register(ctx context.Context, db sql.DB, registration RegisterInput) (UserResult, error) {
+func Register(ctx context.Context, db *sql.DB, registration RegisterInput) (UserResult, error) {
 	panic("not implemented")
 }
 
-func Login(ctx context.Context, db sql.DB, login LoginInput) (LoginResult, error) {
+func Login(ctx context.Context, db *sql.DB, login LoginInput) (LoginResult, error) {
 	panic("not implemented")
 }
 
-func AddUserToSite(ctx context.Context, db sql.DB, userId string, siteId string) (GenericResult, error) {
+func AddUserToSite(ctx context.Context, db *sql.DB, userId string, siteId string) (GenericResult, error) {
 	panic("not implemented")
 }
-

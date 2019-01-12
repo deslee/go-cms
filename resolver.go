@@ -8,8 +8,8 @@ import (
 	"github.com/deslee/cms/data"
 )
 
-type Resolver struct{
-	sql.DB
+type Resolver struct {
+	*sql.DB
 }
 
 func (r *Resolver) Asset() AssetResolver {
