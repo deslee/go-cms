@@ -48,3 +48,12 @@ func GetSites(ctx context.Context, db sql.DB) ([]Site, error) {
 func GetSite(ctx context.Context, db sql.DB, siteId string) (*Site, error) {
 	panic("not implemented")
 }
+
+func UpsertSite(ctx context.Context, db sql.DB, site SiteInput) (SiteResult, error) {
+	panic("not implemented")
+}
+
+func DeleteSite(ctx context.Context, db sql.DB, siteId string) (GenericResult, error) {
+	panic("not implemented")
+}
+

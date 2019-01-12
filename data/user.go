@@ -52,6 +52,23 @@ type UserResult struct {
 	Success      bool         `json:"success"`
 }
 
-func FromContext(ctx context.Context, db sql.DB) (*User, error) {
-
+func UserFromContext(ctx context.Context, db sql.DB) (*User, error) {
+	panic("not implemented")
 }
+
+func UpdateUser(ctx context.Context, db sql.DB, user UserInput) (UserResult, error) {
+	panic("not implemented")
+}
+
+func Register(ctx context.Context, db sql.DB, registration RegisterInput) (UserResult, error) {
+	panic("not implemented")
+}
+
+func Login(ctx context.Context, db sql.DB, login LoginInput) (LoginResult, error) {
+	panic("not implemented")
+}
+
+func AddUserToSite(ctx context.Context, db sql.DB, userId string, siteId string) (GenericResult, error) {
+	panic("not implemented")
+}
+

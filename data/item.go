@@ -39,3 +39,11 @@ func GetItem(ctx context.Context, db sql.DB, s string) (*Item, error) {
 func (item Item) Groups(ctx context.Context, db sql.DB) ([]Group, error) {
 	panic("not implemented")
 }
+
+func UpsertItem(ctx context.Context, db sql.DB, item ItemInput, siteId string) (ItemResult, error) {
+	panic("not implemented")
+}
+
+func DeleteItem(ctx context.Context, db sql.DB, itemId string) (GenericResult, error) {
+	panic("not implemented")
+}
