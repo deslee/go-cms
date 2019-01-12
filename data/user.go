@@ -10,6 +10,9 @@ import (
 	"time"
 )
 
+const SigningKey = "abcdefgjasiojdaoidjabcdefgjasiojdaoidjabcdefsgjasiojdaoidj" // TODO: configure!!
+type UserContextKey string
+
 type User struct {
 	ID       string
 	Email    string
@@ -17,10 +20,6 @@ type User struct {
 	Salt     string
 	Data     JSONObject
 	AuditFields
-}
-
-func (user User) Sites(ctx context.Context, db *sql.DB) ([]Site, error) {
-	panic("not implemented")
 }
 
 type LoginInput struct {
@@ -51,11 +50,6 @@ type UserResult struct {
 	Data *User `json:"data"`
 }
 
-func IsAuthenticated(ctx context.Context) bool {
-	userId, ok := ctx.Value(UserContextKey("sub")).(string)
-	return ok && len(userId) > 0
-}
-
 func UserFromContext(ctx context.Context, db *sql.DB) (*User, error) {
 	userId, ok := ctx.Value(UserContextKey("sub")).(string)
 	if !ok || len(userId) == 0 {
@@ -64,8 +58,49 @@ func UserFromContext(ctx context.Context, db *sql.DB) (*User, error) {
 	return getUserById(ctx, db, userId)
 }
 
-func UpdateUser(ctx context.Context, db *sql.DB, user UserInput) (UserResult, error) {
+func (user User) Sites(ctx context.Context, db *sql.DB) ([]Site, error) {
 	panic("not implemented")
+}
+
+func UpdateUser(ctx context.Context, db *sql.DB, user UserInput) (UserResult, error) {
+	tx, err := db.BeginTx(ctx, nil)
+	if err != nil {
+		panic(err)
+	}
+	defer tx.Rollback()
+	existingUser, err := getUserById(ctx, db, user.ID)
+	if err != nil {
+		panic(err)
+	}
+	if existingUser == nil {
+		return UserResult{GenericResult: GenericErrorMessage(fmt.Sprintf("User %s does not exist", user.ID))}, nil
+	}
+
+	auditFields := CreateAuditFields(ctx, &existingUser.AuditFields)
+
+	executeSql(tx, `UPDATE Users SET Email=?, Data=?, CreatedBy=?, LastUpdatedBy=?, CreatedAt=?, LastUpdatedAt=? WHERE Id=?`,
+		user.Email,
+		user.Data,
+		auditFields.CreatedBy,
+		auditFields.LastUpdatedBy,
+		auditFields.CreatedAt,
+		auditFields.LastUpdatedAt,
+	)
+
+	err = tx.Commit()
+	if err != nil {
+		panic(err)
+	}
+
+	existingUser, err = getUserById(ctx, db, user.ID)
+	if err != nil {
+		panic(err)
+	}
+
+	return UserResult{
+		GenericResult: GenericSuccess(),
+		Data:          existingUser,
+	}, nil
 }
 
 func Register(ctx context.Context, db *sql.DB, registration RegisterInput) (UserResult, error) {
@@ -172,37 +207,34 @@ func getUserByEmail(ctx context.Context, db *sql.DB, email string) (ret *User, e
 }
 
 func getUserById(ctx context.Context, db *sql.DB, id string) (ret *User, err error) {
-	user := User{}
+	ret = &User{}
 	err = db.QueryRowContext(
 		ctx,
 		`SELECT Id, Email, Password, Salt, Data, CreatedBy, LastUpdatedBy, CreatedAt, LastUpdatedAt from Users where Id = ?`, id,
 	).Scan(
-		&user.ID, &user.Email, &user.Password, &user.Salt, &user.Data, &user.CreatedBy, &user.LastUpdatedBy, &user.CreatedAt, &user.LastUpdatedAt,
+		&ret.ID, &ret.Email, &ret.Password, &ret.Salt, &ret.Data, &ret.CreatedBy, &ret.LastUpdatedBy, &ret.CreatedAt, &ret.LastUpdatedAt,
 	)
 
 	if err == sql.ErrNoRows {
 		err = nil
+	}
+
+	if err != nil {
 		ret = nil
-	} else if err == nil {
-		ret = &user
 	}
 
 	return
 }
 
-const privateKey = "abcdefgjasiojdaoidjabcdefgjasiojdaoidjabcdefgjasiojdaoidj" //
-
-type UserContextKey string
-
 func ParseTokenToContext(tokenString string, ctx context.Context) (context.Context, error) {
 	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
-		// Don't forget to validate the alg is what you expect:
+		// Don't forget to validated the alg is what you expect:
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
 		}
 
 		// hmacSampleSecret is a []byte containing your secret, e.g. []byte("my_secret_key")
-		return []byte(privateKey), nil
+		return []byte(SigningKey), nil
 	})
 
 	if err != nil {
@@ -221,14 +253,14 @@ func ParseTokenToContext(tokenString string, ctx context.Context) (context.Conte
 }
 
 func generateToken(user *User) string {
-	const hoursExpire = 7 & 24
+	const hoursExpire = 7 * 24
 	token := jwt.NewWithClaims(jwt.SigningMethodHS512, jwt.MapClaims{
 		"exp": time.Hour * hoursExpire, // expires at
-		"sub": user.ID, // subject
-		"iat": time.Now().Unix(), // issued at
+		"sub": user.ID,                 // subject
+		"iat": time.Now().Unix(),       // issued at
 	})
 
-	tokenString, err := token.SignedString([]byte(privateKey))
+	tokenString, err := token.SignedString([]byte(SigningKey))
 	if err != nil {
 		panic(err)
 	}
