@@ -4,7 +4,7 @@
 # for detailed .gqlgen.yml documentation.
 
 schema:
-- schema.graphql
+  - schema.graphql
 exec:
   filename: generated.go
 model:
@@ -14,12 +14,32 @@ resolver:
   type: Resolver
 models:
   Site:
-    model: github.com/deslee/cms/database/models.Site
+    model: github.com/deslee/cms/data.Site
   Item:
-    model: github.com/deslee/cms/database/models.Item
+    model: github.com/deslee/cms/data.Item
   Group:
-    model: github.com/deslee/cms/database/models.Group
+    model: github.com/deslee/cms/data.Group
   Asset:
-    model: github.com/deslee/cms/database/models.Asset
+    model: github.com/deslee/cms/data.Asset
   User:
-    model: github.com/deslee/cms/database/models.User
+    model: github.com/deslee/cms/data.User
+  GenericResult:
+    model: github.com/deslee/cms/data.GenericResult
+  ItemInput:
+    model: github.com/deslee/cms/data.ItemInput
+  ItemResult:
+    model: github.com/deslee/cms/data.ItemResult
+  LoginInput:
+    model: github.com/deslee/cms/data.LoginInput
+  LoginResult:
+    model: github.com/deslee/cms/data.LoginResult
+  RegisterInput:
+    model: github.com/deslee/cms/data.RegisterInput
+  SiteInput:
+    model: github.com/deslee/cms/data.SiteInput
+  SiteResult:
+    model: github.com/deslee/cms/data.SiteResult
+  UserInput:
+    model: github.com/deslee/cms/data.UserInput
+  UserResult:
+    model: github.com/deslee/cms/data.UserResult

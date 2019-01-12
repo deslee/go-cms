@@ -11,7 +11,7 @@ import (
 
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/99designs/gqlgen/graphql/introspection"
-	"github.com/deslee/cms/database/models"
+	"github.com/deslee/cms/data"
 	"github.com/vektah/gqlparser"
 	"github.com/vektah/gqlparser/ast"
 )
@@ -96,11 +96,11 @@ type ComplexityRoot struct {
 		DeleteAsset   func(childComplexity int, assetId string) int
 		DeleteItem    func(childComplexity int, itemId string) int
 		DeleteSite    func(childComplexity int, siteId string) int
-		Login         func(childComplexity int, login LoginInput) int
-		Register      func(childComplexity int, registration RegisterInput) int
-		UpdateUser    func(childComplexity int, user UserInput) int
-		UpsertItem    func(childComplexity int, item ItemInput, siteId string) int
-		UpsertSite    func(childComplexity int, site SiteInput) int
+		Login         func(childComplexity int, login data.LoginInput) int
+		Register      func(childComplexity int, registration data.RegisterInput) int
+		UpdateUser    func(childComplexity int, user data.UserInput) int
+		UpsertItem    func(childComplexity int, item data.ItemInput, siteId string) int
+		UpsertSite    func(childComplexity int, site data.SiteInput) int
 	}
 
 	Query struct {
@@ -146,42 +146,49 @@ type ComplexityRoot struct {
 }
 
 type AssetResolver interface {
-	FileName(ctx context.Context, obj *models.Asset) (string, error)
-	Extension(ctx context.Context, obj *models.Asset) (string, error)
-	Items(ctx context.Context, obj *models.Asset) ([]*models.Item, error)
+	Items(ctx context.Context, obj *data.Asset) ([]data.Item, error)
+	CreatedAt(ctx context.Context, obj *data.Asset) (string, error)
+
+	LastUpdatedAt(ctx context.Context, obj *data.Asset) (string, error)
 }
 type GroupResolver interface {
-	Items(ctx context.Context, obj *models.Group) ([]*models.Item, error)
+	Items(ctx context.Context, obj *data.Group) ([]data.Item, error)
 }
 type ItemResolver interface {
-	Groups(ctx context.Context, obj *models.Item) ([]*models.Group, error)
+	Groups(ctx context.Context, obj *data.Item) ([]data.Group, error)
+	CreatedAt(ctx context.Context, obj *data.Item) (string, error)
+
+	LastUpdatedAt(ctx context.Context, obj *data.Item) (string, error)
 }
 type MutationResolver interface {
-	AddUserToSite(ctx context.Context, userId string, siteId string) (GenericResult, error)
-	DeleteAsset(ctx context.Context, assetId string) (GenericResult, error)
-	DeleteItem(ctx context.Context, itemId string) (GenericResult, error)
-	DeleteSite(ctx context.Context, siteId string) (GenericResult, error)
-	Login(ctx context.Context, login LoginInput) (LoginResult, error)
-	Register(ctx context.Context, registration RegisterInput) (UserResult, error)
-	UpdateUser(ctx context.Context, user UserInput) (UserResult, error)
-	UpsertItem(ctx context.Context, item ItemInput, siteId string) (ItemResult, error)
-	UpsertSite(ctx context.Context, site SiteInput) (SiteResult, error)
+	AddUserToSite(ctx context.Context, userId string, siteId string) (data.GenericResult, error)
+	DeleteAsset(ctx context.Context, assetId string) (data.GenericResult, error)
+	DeleteItem(ctx context.Context, itemId string) (data.GenericResult, error)
+	DeleteSite(ctx context.Context, siteId string) (data.GenericResult, error)
+	Login(ctx context.Context, login data.LoginInput) (data.LoginResult, error)
+	Register(ctx context.Context, registration data.RegisterInput) (data.UserResult, error)
+	UpdateUser(ctx context.Context, user data.UserInput) (data.UserResult, error)
+	UpsertItem(ctx context.Context, item data.ItemInput, siteId string) (data.ItemResult, error)
+	UpsertSite(ctx context.Context, site data.SiteInput) (data.SiteResult, error)
 }
 type QueryResolver interface {
-	Asset(ctx context.Context, assetId string) (*models.Asset, error)
-	Items(ctx context.Context, siteId string) ([]*models.Item, error)
-	Item(ctx context.Context, itemId string) (*models.Item, error)
-	Me(ctx context.Context) (*models.User, error)
-	Site(ctx context.Context, siteId string) (*models.Site, error)
-	Sites(ctx context.Context) ([]*models.Site, error)
+	Asset(ctx context.Context, assetId string) (*data.Asset, error)
+	Items(ctx context.Context, siteId string) ([]data.Item, error)
+	Item(ctx context.Context, itemId string) (*data.Item, error)
+	Me(ctx context.Context) (*data.User, error)
+	Site(ctx context.Context, siteId string) (*data.Site, error)
+	Sites(ctx context.Context) ([]data.Site, error)
 }
 type SiteResolver interface {
-	Assets(ctx context.Context, obj *models.Site) ([]*models.Asset, error)
-	Groups(ctx context.Context, obj *models.Site) ([]*models.Group, error)
-	Items(ctx context.Context, obj *models.Site) ([]*models.Item, error)
+	Assets(ctx context.Context, obj *data.Site) ([]data.Asset, error)
+	Groups(ctx context.Context, obj *data.Site) ([]data.Group, error)
+	Items(ctx context.Context, obj *data.Site) ([]data.Item, error)
+	CreatedAt(ctx context.Context, obj *data.Site) (string, error)
+
+	LastUpdatedAt(ctx context.Context, obj *data.Site) (string, error)
 }
 type UserResolver interface {
-	Sites(ctx context.Context, obj *models.User) ([]*models.Site, error)
+	Sites(ctx context.Context, obj *data.User) ([]data.Site, error)
 }
 
 func field_Mutation_addUserToSite_args(rawArgs map[string]interface{}) (map[string]interface{}, error) {
@@ -255,7 +262,7 @@ func field_Mutation_deleteSite_args(rawArgs map[string]interface{}) (map[string]
 
 func field_Mutation_login_args(rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	args := map[string]interface{}{}
-	var arg0 LoginInput
+	var arg0 data.LoginInput
 	if tmp, ok := rawArgs["login"]; ok {
 		var err error
 		arg0, err = UnmarshalLoginInput(tmp)
@@ -270,7 +277,7 @@ func field_Mutation_login_args(rawArgs map[string]interface{}) (map[string]inter
 
 func field_Mutation_register_args(rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	args := map[string]interface{}{}
-	var arg0 RegisterInput
+	var arg0 data.RegisterInput
 	if tmp, ok := rawArgs["registration"]; ok {
 		var err error
 		arg0, err = UnmarshalRegisterInput(tmp)
@@ -285,7 +292,7 @@ func field_Mutation_register_args(rawArgs map[string]interface{}) (map[string]in
 
 func field_Mutation_updateUser_args(rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	args := map[string]interface{}{}
-	var arg0 UserInput
+	var arg0 data.UserInput
 	if tmp, ok := rawArgs["user"]; ok {
 		var err error
 		arg0, err = UnmarshalUserInput(tmp)
@@ -300,7 +307,7 @@ func field_Mutation_updateUser_args(rawArgs map[string]interface{}) (map[string]
 
 func field_Mutation_upsertItem_args(rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	args := map[string]interface{}{}
-	var arg0 ItemInput
+	var arg0 data.ItemInput
 	if tmp, ok := rawArgs["item"]; ok {
 		var err error
 		arg0, err = UnmarshalItemInput(tmp)
@@ -324,7 +331,7 @@ func field_Mutation_upsertItem_args(rawArgs map[string]interface{}) (map[string]
 
 func field_Mutation_upsertSite_args(rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	args := map[string]interface{}{}
-	var arg0 SiteInput
+	var arg0 data.SiteInput
 	if tmp, ok := rawArgs["site"]; ok {
 		var err error
 		arg0, err = UnmarshalSiteInput(tmp)
@@ -709,7 +716,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Mutation.Login(childComplexity, args["login"].(LoginInput)), true
+		return e.complexity.Mutation.Login(childComplexity, args["login"].(data.LoginInput)), true
 
 	case "Mutation.register":
 		if e.complexity.Mutation.Register == nil {
@@ -721,7 +728,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Mutation.Register(childComplexity, args["registration"].(RegisterInput)), true
+		return e.complexity.Mutation.Register(childComplexity, args["registration"].(data.RegisterInput)), true
 
 	case "Mutation.updateUser":
 		if e.complexity.Mutation.UpdateUser == nil {
@@ -733,7 +740,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Mutation.UpdateUser(childComplexity, args["user"].(UserInput)), true
+		return e.complexity.Mutation.UpdateUser(childComplexity, args["user"].(data.UserInput)), true
 
 	case "Mutation.upsertItem":
 		if e.complexity.Mutation.UpsertItem == nil {
@@ -745,7 +752,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Mutation.UpsertItem(childComplexity, args["item"].(ItemInput), args["siteId"].(string)), true
+		return e.complexity.Mutation.UpsertItem(childComplexity, args["item"].(data.ItemInput), args["siteId"].(string)), true
 
 	case "Mutation.upsertSite":
 		if e.complexity.Mutation.UpsertSite == nil {
@@ -757,7 +764,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Mutation.UpsertSite(childComplexity, args["site"].(SiteInput)), true
+		return e.complexity.Mutation.UpsertSite(childComplexity, args["site"].(data.SiteInput)), true
 
 	case "Query.asset":
 		if e.complexity.Query.Asset == nil {
@@ -1010,7 +1017,7 @@ type executionContext struct {
 var assetImplementors = []string{"Asset"}
 
 // nolint: gocyclo, errcheck, gas, goconst
-func (ec *executionContext) _Asset(ctx context.Context, sel ast.SelectionSet, obj *models.Asset) graphql.Marshaler {
+func (ec *executionContext) _Asset(ctx context.Context, sel ast.SelectionSet, obj *data.Asset) graphql.Marshaler {
 	fields := graphql.CollectFields(ctx, sel, assetImplementors)
 
 	var wg sync.WaitGroup
@@ -1038,23 +1045,15 @@ func (ec *executionContext) _Asset(ctx context.Context, sel ast.SelectionSet, ob
 				invalid = true
 			}
 		case "fileName":
-			wg.Add(1)
-			go func(i int, field graphql.CollectedField) {
-				out.Values[i] = ec._Asset_fileName(ctx, field, obj)
-				if out.Values[i] == graphql.Null {
-					invalid = true
-				}
-				wg.Done()
-			}(i, field)
+			out.Values[i] = ec._Asset_fileName(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalid = true
+			}
 		case "extension":
-			wg.Add(1)
-			go func(i int, field graphql.CollectedField) {
-				out.Values[i] = ec._Asset_extension(ctx, field, obj)
-				if out.Values[i] == graphql.Null {
-					invalid = true
-				}
-				wg.Done()
-			}(i, field)
+			out.Values[i] = ec._Asset_extension(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalid = true
+			}
 		case "items":
 			wg.Add(1)
 			go func(i int, field graphql.CollectedField) {
@@ -1065,20 +1064,28 @@ func (ec *executionContext) _Asset(ctx context.Context, sel ast.SelectionSet, ob
 				wg.Done()
 			}(i, field)
 		case "createdAt":
-			out.Values[i] = ec._Asset_createdAt(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				invalid = true
-			}
+			wg.Add(1)
+			go func(i int, field graphql.CollectedField) {
+				out.Values[i] = ec._Asset_createdAt(ctx, field, obj)
+				if out.Values[i] == graphql.Null {
+					invalid = true
+				}
+				wg.Done()
+			}(i, field)
 		case "createdBy":
 			out.Values[i] = ec._Asset_createdBy(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				invalid = true
 			}
 		case "lastUpdatedAt":
-			out.Values[i] = ec._Asset_lastUpdatedAt(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				invalid = true
-			}
+			wg.Add(1)
+			go func(i int, field graphql.CollectedField) {
+				out.Values[i] = ec._Asset_lastUpdatedAt(ctx, field, obj)
+				if out.Values[i] == graphql.Null {
+					invalid = true
+				}
+				wg.Done()
+			}(i, field)
 		case "lastUpdatedBy":
 			out.Values[i] = ec._Asset_lastUpdatedBy(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
@@ -1096,7 +1103,7 @@ func (ec *executionContext) _Asset(ctx context.Context, sel ast.SelectionSet, ob
 }
 
 // nolint: vetshadow
-func (ec *executionContext) _Asset_id(ctx context.Context, field graphql.CollectedField, obj *models.Asset) graphql.Marshaler {
+func (ec *executionContext) _Asset_id(ctx context.Context, field graphql.CollectedField, obj *data.Asset) graphql.Marshaler {
 	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() { ec.Tracer.EndFieldExecution(ctx) }()
 	rctx := &graphql.ResolverContext{
@@ -1123,7 +1130,7 @@ func (ec *executionContext) _Asset_id(ctx context.Context, field graphql.Collect
 }
 
 // nolint: vetshadow
-func (ec *executionContext) _Asset_type(ctx context.Context, field graphql.CollectedField, obj *models.Asset) graphql.Marshaler {
+func (ec *executionContext) _Asset_type(ctx context.Context, field graphql.CollectedField, obj *data.Asset) graphql.Marshaler {
 	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() { ec.Tracer.EndFieldExecution(ctx) }()
 	rctx := &graphql.ResolverContext{
@@ -1150,7 +1157,7 @@ func (ec *executionContext) _Asset_type(ctx context.Context, field graphql.Colle
 }
 
 // nolint: vetshadow
-func (ec *executionContext) _Asset_state(ctx context.Context, field graphql.CollectedField, obj *models.Asset) graphql.Marshaler {
+func (ec *executionContext) _Asset_state(ctx context.Context, field graphql.CollectedField, obj *data.Asset) graphql.Marshaler {
 	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() { ec.Tracer.EndFieldExecution(ctx) }()
 	rctx := &graphql.ResolverContext{
@@ -1177,7 +1184,7 @@ func (ec *executionContext) _Asset_state(ctx context.Context, field graphql.Coll
 }
 
 // nolint: vetshadow
-func (ec *executionContext) _Asset_fileName(ctx context.Context, field graphql.CollectedField, obj *models.Asset) graphql.Marshaler {
+func (ec *executionContext) _Asset_fileName(ctx context.Context, field graphql.CollectedField, obj *data.Asset) graphql.Marshaler {
 	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() { ec.Tracer.EndFieldExecution(ctx) }()
 	rctx := &graphql.ResolverContext{
@@ -1189,7 +1196,7 @@ func (ec *executionContext) _Asset_fileName(ctx context.Context, field graphql.C
 	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
 	resTmp := ec.FieldMiddleware(ctx, obj, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Asset().FileName(rctx, obj)
+		return obj.FileName(), nil
 	})
 	if resTmp == nil {
 		if !ec.HasError(rctx) {
@@ -1204,7 +1211,7 @@ func (ec *executionContext) _Asset_fileName(ctx context.Context, field graphql.C
 }
 
 // nolint: vetshadow
-func (ec *executionContext) _Asset_extension(ctx context.Context, field graphql.CollectedField, obj *models.Asset) graphql.Marshaler {
+func (ec *executionContext) _Asset_extension(ctx context.Context, field graphql.CollectedField, obj *data.Asset) graphql.Marshaler {
 	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() { ec.Tracer.EndFieldExecution(ctx) }()
 	rctx := &graphql.ResolverContext{
@@ -1216,7 +1223,7 @@ func (ec *executionContext) _Asset_extension(ctx context.Context, field graphql.
 	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
 	resTmp := ec.FieldMiddleware(ctx, obj, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Asset().Extension(rctx, obj)
+		return obj.Extension(), nil
 	})
 	if resTmp == nil {
 		if !ec.HasError(rctx) {
@@ -1231,7 +1238,7 @@ func (ec *executionContext) _Asset_extension(ctx context.Context, field graphql.
 }
 
 // nolint: vetshadow
-func (ec *executionContext) _Asset_items(ctx context.Context, field graphql.CollectedField, obj *models.Asset) graphql.Marshaler {
+func (ec *executionContext) _Asset_items(ctx context.Context, field graphql.CollectedField, obj *data.Asset) graphql.Marshaler {
 	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() { ec.Tracer.EndFieldExecution(ctx) }()
 	rctx := &graphql.ResolverContext{
@@ -1251,7 +1258,7 @@ func (ec *executionContext) _Asset_items(ctx context.Context, field graphql.Coll
 		}
 		return graphql.Null
 	}
-	res := resTmp.([]*models.Item)
+	res := resTmp.([]data.Item)
 	rctx.Result = res
 	ctx = ec.Tracer.StartFieldChildExecution(ctx)
 
@@ -1267,7 +1274,7 @@ func (ec *executionContext) _Asset_items(ctx context.Context, field graphql.Coll
 		idx1 := idx1
 		rctx := &graphql.ResolverContext{
 			Index:  &idx1,
-			Result: res[idx1],
+			Result: &res[idx1],
 		}
 		ctx := graphql.WithResolverContext(ctx, rctx)
 		f := func(idx1 int) {
@@ -1276,11 +1283,7 @@ func (ec *executionContext) _Asset_items(ctx context.Context, field graphql.Coll
 			}
 			arr1[idx1] = func() graphql.Marshaler {
 
-				if res[idx1] == nil {
-					return graphql.Null
-				}
-
-				return ec._Item(ctx, field.Selections, res[idx1])
+				return ec._Item(ctx, field.Selections, &res[idx1])
 			}()
 		}
 		if isLen1 {
@@ -1295,7 +1298,7 @@ func (ec *executionContext) _Asset_items(ctx context.Context, field graphql.Coll
 }
 
 // nolint: vetshadow
-func (ec *executionContext) _Asset_createdAt(ctx context.Context, field graphql.CollectedField, obj *models.Asset) graphql.Marshaler {
+func (ec *executionContext) _Asset_createdAt(ctx context.Context, field graphql.CollectedField, obj *data.Asset) graphql.Marshaler {
 	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() { ec.Tracer.EndFieldExecution(ctx) }()
 	rctx := &graphql.ResolverContext{
@@ -1307,7 +1310,7 @@ func (ec *executionContext) _Asset_createdAt(ctx context.Context, field graphql.
 	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
 	resTmp := ec.FieldMiddleware(ctx, obj, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.CreatedAt, nil
+		return ec.resolvers.Asset().CreatedAt(rctx, obj)
 	})
 	if resTmp == nil {
 		if !ec.HasError(rctx) {
@@ -1322,7 +1325,7 @@ func (ec *executionContext) _Asset_createdAt(ctx context.Context, field graphql.
 }
 
 // nolint: vetshadow
-func (ec *executionContext) _Asset_createdBy(ctx context.Context, field graphql.CollectedField, obj *models.Asset) graphql.Marshaler {
+func (ec *executionContext) _Asset_createdBy(ctx context.Context, field graphql.CollectedField, obj *data.Asset) graphql.Marshaler {
 	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() { ec.Tracer.EndFieldExecution(ctx) }()
 	rctx := &graphql.ResolverContext{
@@ -1349,7 +1352,7 @@ func (ec *executionContext) _Asset_createdBy(ctx context.Context, field graphql.
 }
 
 // nolint: vetshadow
-func (ec *executionContext) _Asset_lastUpdatedAt(ctx context.Context, field graphql.CollectedField, obj *models.Asset) graphql.Marshaler {
+func (ec *executionContext) _Asset_lastUpdatedAt(ctx context.Context, field graphql.CollectedField, obj *data.Asset) graphql.Marshaler {
 	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() { ec.Tracer.EndFieldExecution(ctx) }()
 	rctx := &graphql.ResolverContext{
@@ -1361,7 +1364,7 @@ func (ec *executionContext) _Asset_lastUpdatedAt(ctx context.Context, field grap
 	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
 	resTmp := ec.FieldMiddleware(ctx, obj, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.LastUpdatedAt, nil
+		return ec.resolvers.Asset().LastUpdatedAt(rctx, obj)
 	})
 	if resTmp == nil {
 		if !ec.HasError(rctx) {
@@ -1376,7 +1379,7 @@ func (ec *executionContext) _Asset_lastUpdatedAt(ctx context.Context, field grap
 }
 
 // nolint: vetshadow
-func (ec *executionContext) _Asset_lastUpdatedBy(ctx context.Context, field graphql.CollectedField, obj *models.Asset) graphql.Marshaler {
+func (ec *executionContext) _Asset_lastUpdatedBy(ctx context.Context, field graphql.CollectedField, obj *data.Asset) graphql.Marshaler {
 	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() { ec.Tracer.EndFieldExecution(ctx) }()
 	rctx := &graphql.ResolverContext{
@@ -1405,7 +1408,7 @@ func (ec *executionContext) _Asset_lastUpdatedBy(ctx context.Context, field grap
 var genericResultImplementors = []string{"GenericResult"}
 
 // nolint: gocyclo, errcheck, gas, goconst
-func (ec *executionContext) _GenericResult(ctx context.Context, sel ast.SelectionSet, obj *GenericResult) graphql.Marshaler {
+func (ec *executionContext) _GenericResult(ctx context.Context, sel ast.SelectionSet, obj *data.GenericResult) graphql.Marshaler {
 	fields := graphql.CollectFields(ctx, sel, genericResultImplementors)
 
 	out := graphql.NewOrderedMap(len(fields))
@@ -1435,7 +1438,7 @@ func (ec *executionContext) _GenericResult(ctx context.Context, sel ast.Selectio
 }
 
 // nolint: vetshadow
-func (ec *executionContext) _GenericResult_errorMessage(ctx context.Context, field graphql.CollectedField, obj *GenericResult) graphql.Marshaler {
+func (ec *executionContext) _GenericResult_errorMessage(ctx context.Context, field graphql.CollectedField, obj *data.GenericResult) graphql.Marshaler {
 	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() { ec.Tracer.EndFieldExecution(ctx) }()
 	rctx := &graphql.ResolverContext{
@@ -1463,7 +1466,7 @@ func (ec *executionContext) _GenericResult_errorMessage(ctx context.Context, fie
 }
 
 // nolint: vetshadow
-func (ec *executionContext) _GenericResult_success(ctx context.Context, field graphql.CollectedField, obj *GenericResult) graphql.Marshaler {
+func (ec *executionContext) _GenericResult_success(ctx context.Context, field graphql.CollectedField, obj *data.GenericResult) graphql.Marshaler {
 	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() { ec.Tracer.EndFieldExecution(ctx) }()
 	rctx := &graphql.ResolverContext{
@@ -1492,7 +1495,7 @@ func (ec *executionContext) _GenericResult_success(ctx context.Context, field gr
 var groupImplementors = []string{"Group"}
 
 // nolint: gocyclo, errcheck, gas, goconst
-func (ec *executionContext) _Group(ctx context.Context, sel ast.SelectionSet, obj *models.Group) graphql.Marshaler {
+func (ec *executionContext) _Group(ctx context.Context, sel ast.SelectionSet, obj *data.Group) graphql.Marshaler {
 	fields := graphql.CollectFields(ctx, sel, groupImplementors)
 
 	var wg sync.WaitGroup
@@ -1530,7 +1533,7 @@ func (ec *executionContext) _Group(ctx context.Context, sel ast.SelectionSet, ob
 }
 
 // nolint: vetshadow
-func (ec *executionContext) _Group_name(ctx context.Context, field graphql.CollectedField, obj *models.Group) graphql.Marshaler {
+func (ec *executionContext) _Group_name(ctx context.Context, field graphql.CollectedField, obj *data.Group) graphql.Marshaler {
 	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() { ec.Tracer.EndFieldExecution(ctx) }()
 	rctx := &graphql.ResolverContext{
@@ -1557,7 +1560,7 @@ func (ec *executionContext) _Group_name(ctx context.Context, field graphql.Colle
 }
 
 // nolint: vetshadow
-func (ec *executionContext) _Group_items(ctx context.Context, field graphql.CollectedField, obj *models.Group) graphql.Marshaler {
+func (ec *executionContext) _Group_items(ctx context.Context, field graphql.CollectedField, obj *data.Group) graphql.Marshaler {
 	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() { ec.Tracer.EndFieldExecution(ctx) }()
 	rctx := &graphql.ResolverContext{
@@ -1577,7 +1580,7 @@ func (ec *executionContext) _Group_items(ctx context.Context, field graphql.Coll
 		}
 		return graphql.Null
 	}
-	res := resTmp.([]*models.Item)
+	res := resTmp.([]data.Item)
 	rctx.Result = res
 	ctx = ec.Tracer.StartFieldChildExecution(ctx)
 
@@ -1593,7 +1596,7 @@ func (ec *executionContext) _Group_items(ctx context.Context, field graphql.Coll
 		idx1 := idx1
 		rctx := &graphql.ResolverContext{
 			Index:  &idx1,
-			Result: res[idx1],
+			Result: &res[idx1],
 		}
 		ctx := graphql.WithResolverContext(ctx, rctx)
 		f := func(idx1 int) {
@@ -1602,11 +1605,7 @@ func (ec *executionContext) _Group_items(ctx context.Context, field graphql.Coll
 			}
 			arr1[idx1] = func() graphql.Marshaler {
 
-				if res[idx1] == nil {
-					return graphql.Null
-				}
-
-				return ec._Item(ctx, field.Selections, res[idx1])
+				return ec._Item(ctx, field.Selections, &res[idx1])
 			}()
 		}
 		if isLen1 {
@@ -1623,7 +1622,7 @@ func (ec *executionContext) _Group_items(ctx context.Context, field graphql.Coll
 var itemImplementors = []string{"Item"}
 
 // nolint: gocyclo, errcheck, gas, goconst
-func (ec *executionContext) _Item(ctx context.Context, sel ast.SelectionSet, obj *models.Item) graphql.Marshaler {
+func (ec *executionContext) _Item(ctx context.Context, sel ast.SelectionSet, obj *data.Item) graphql.Marshaler {
 	fields := graphql.CollectFields(ctx, sel, itemImplementors)
 
 	var wg sync.WaitGroup
@@ -1655,20 +1654,28 @@ func (ec *executionContext) _Item(ctx context.Context, sel ast.SelectionSet, obj
 				wg.Done()
 			}(i, field)
 		case "createdAt":
-			out.Values[i] = ec._Item_createdAt(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				invalid = true
-			}
+			wg.Add(1)
+			go func(i int, field graphql.CollectedField) {
+				out.Values[i] = ec._Item_createdAt(ctx, field, obj)
+				if out.Values[i] == graphql.Null {
+					invalid = true
+				}
+				wg.Done()
+			}(i, field)
 		case "createdBy":
 			out.Values[i] = ec._Item_createdBy(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				invalid = true
 			}
 		case "lastUpdatedAt":
-			out.Values[i] = ec._Item_lastUpdatedAt(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				invalid = true
-			}
+			wg.Add(1)
+			go func(i int, field graphql.CollectedField) {
+				out.Values[i] = ec._Item_lastUpdatedAt(ctx, field, obj)
+				if out.Values[i] == graphql.Null {
+					invalid = true
+				}
+				wg.Done()
+			}(i, field)
 		case "lastUpdatedBy":
 			out.Values[i] = ec._Item_lastUpdatedBy(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
@@ -1686,7 +1693,7 @@ func (ec *executionContext) _Item(ctx context.Context, sel ast.SelectionSet, obj
 }
 
 // nolint: vetshadow
-func (ec *executionContext) _Item_id(ctx context.Context, field graphql.CollectedField, obj *models.Item) graphql.Marshaler {
+func (ec *executionContext) _Item_id(ctx context.Context, field graphql.CollectedField, obj *data.Item) graphql.Marshaler {
 	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() { ec.Tracer.EndFieldExecution(ctx) }()
 	rctx := &graphql.ResolverContext{
@@ -1713,7 +1720,7 @@ func (ec *executionContext) _Item_id(ctx context.Context, field graphql.Collecte
 }
 
 // nolint: vetshadow
-func (ec *executionContext) _Item_data(ctx context.Context, field graphql.CollectedField, obj *models.Item) graphql.Marshaler {
+func (ec *executionContext) _Item_data(ctx context.Context, field graphql.CollectedField, obj *data.Item) graphql.Marshaler {
 	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() { ec.Tracer.EndFieldExecution(ctx) }()
 	rctx := &graphql.ResolverContext{
@@ -1740,7 +1747,7 @@ func (ec *executionContext) _Item_data(ctx context.Context, field graphql.Collec
 }
 
 // nolint: vetshadow
-func (ec *executionContext) _Item_groups(ctx context.Context, field graphql.CollectedField, obj *models.Item) graphql.Marshaler {
+func (ec *executionContext) _Item_groups(ctx context.Context, field graphql.CollectedField, obj *data.Item) graphql.Marshaler {
 	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() { ec.Tracer.EndFieldExecution(ctx) }()
 	rctx := &graphql.ResolverContext{
@@ -1760,7 +1767,7 @@ func (ec *executionContext) _Item_groups(ctx context.Context, field graphql.Coll
 		}
 		return graphql.Null
 	}
-	res := resTmp.([]*models.Group)
+	res := resTmp.([]data.Group)
 	rctx.Result = res
 	ctx = ec.Tracer.StartFieldChildExecution(ctx)
 
@@ -1776,7 +1783,7 @@ func (ec *executionContext) _Item_groups(ctx context.Context, field graphql.Coll
 		idx1 := idx1
 		rctx := &graphql.ResolverContext{
 			Index:  &idx1,
-			Result: res[idx1],
+			Result: &res[idx1],
 		}
 		ctx := graphql.WithResolverContext(ctx, rctx)
 		f := func(idx1 int) {
@@ -1785,11 +1792,7 @@ func (ec *executionContext) _Item_groups(ctx context.Context, field graphql.Coll
 			}
 			arr1[idx1] = func() graphql.Marshaler {
 
-				if res[idx1] == nil {
-					return graphql.Null
-				}
-
-				return ec._Group(ctx, field.Selections, res[idx1])
+				return ec._Group(ctx, field.Selections, &res[idx1])
 			}()
 		}
 		if isLen1 {
@@ -1804,7 +1807,7 @@ func (ec *executionContext) _Item_groups(ctx context.Context, field graphql.Coll
 }
 
 // nolint: vetshadow
-func (ec *executionContext) _Item_createdAt(ctx context.Context, field graphql.CollectedField, obj *models.Item) graphql.Marshaler {
+func (ec *executionContext) _Item_createdAt(ctx context.Context, field graphql.CollectedField, obj *data.Item) graphql.Marshaler {
 	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() { ec.Tracer.EndFieldExecution(ctx) }()
 	rctx := &graphql.ResolverContext{
@@ -1816,7 +1819,7 @@ func (ec *executionContext) _Item_createdAt(ctx context.Context, field graphql.C
 	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
 	resTmp := ec.FieldMiddleware(ctx, obj, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.CreatedAt, nil
+		return ec.resolvers.Item().CreatedAt(rctx, obj)
 	})
 	if resTmp == nil {
 		if !ec.HasError(rctx) {
@@ -1831,7 +1834,7 @@ func (ec *executionContext) _Item_createdAt(ctx context.Context, field graphql.C
 }
 
 // nolint: vetshadow
-func (ec *executionContext) _Item_createdBy(ctx context.Context, field graphql.CollectedField, obj *models.Item) graphql.Marshaler {
+func (ec *executionContext) _Item_createdBy(ctx context.Context, field graphql.CollectedField, obj *data.Item) graphql.Marshaler {
 	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() { ec.Tracer.EndFieldExecution(ctx) }()
 	rctx := &graphql.ResolverContext{
@@ -1858,7 +1861,7 @@ func (ec *executionContext) _Item_createdBy(ctx context.Context, field graphql.C
 }
 
 // nolint: vetshadow
-func (ec *executionContext) _Item_lastUpdatedAt(ctx context.Context, field graphql.CollectedField, obj *models.Item) graphql.Marshaler {
+func (ec *executionContext) _Item_lastUpdatedAt(ctx context.Context, field graphql.CollectedField, obj *data.Item) graphql.Marshaler {
 	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() { ec.Tracer.EndFieldExecution(ctx) }()
 	rctx := &graphql.ResolverContext{
@@ -1870,7 +1873,7 @@ func (ec *executionContext) _Item_lastUpdatedAt(ctx context.Context, field graph
 	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
 	resTmp := ec.FieldMiddleware(ctx, obj, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.LastUpdatedAt, nil
+		return ec.resolvers.Item().LastUpdatedAt(rctx, obj)
 	})
 	if resTmp == nil {
 		if !ec.HasError(rctx) {
@@ -1885,7 +1888,7 @@ func (ec *executionContext) _Item_lastUpdatedAt(ctx context.Context, field graph
 }
 
 // nolint: vetshadow
-func (ec *executionContext) _Item_lastUpdatedBy(ctx context.Context, field graphql.CollectedField, obj *models.Item) graphql.Marshaler {
+func (ec *executionContext) _Item_lastUpdatedBy(ctx context.Context, field graphql.CollectedField, obj *data.Item) graphql.Marshaler {
 	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() { ec.Tracer.EndFieldExecution(ctx) }()
 	rctx := &graphql.ResolverContext{
@@ -1914,7 +1917,7 @@ func (ec *executionContext) _Item_lastUpdatedBy(ctx context.Context, field graph
 var itemResultImplementors = []string{"ItemResult"}
 
 // nolint: gocyclo, errcheck, gas, goconst
-func (ec *executionContext) _ItemResult(ctx context.Context, sel ast.SelectionSet, obj *ItemResult) graphql.Marshaler {
+func (ec *executionContext) _ItemResult(ctx context.Context, sel ast.SelectionSet, obj *data.ItemResult) graphql.Marshaler {
 	fields := graphql.CollectFields(ctx, sel, itemResultImplementors)
 
 	out := graphql.NewOrderedMap(len(fields))
@@ -1946,7 +1949,7 @@ func (ec *executionContext) _ItemResult(ctx context.Context, sel ast.SelectionSe
 }
 
 // nolint: vetshadow
-func (ec *executionContext) _ItemResult_data(ctx context.Context, field graphql.CollectedField, obj *ItemResult) graphql.Marshaler {
+func (ec *executionContext) _ItemResult_data(ctx context.Context, field graphql.CollectedField, obj *data.ItemResult) graphql.Marshaler {
 	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() { ec.Tracer.EndFieldExecution(ctx) }()
 	rctx := &graphql.ResolverContext{
@@ -1963,7 +1966,7 @@ func (ec *executionContext) _ItemResult_data(ctx context.Context, field graphql.
 	if resTmp == nil {
 		return graphql.Null
 	}
-	res := resTmp.(*models.Item)
+	res := resTmp.(*data.Item)
 	rctx.Result = res
 	ctx = ec.Tracer.StartFieldChildExecution(ctx)
 
@@ -1975,7 +1978,7 @@ func (ec *executionContext) _ItemResult_data(ctx context.Context, field graphql.
 }
 
 // nolint: vetshadow
-func (ec *executionContext) _ItemResult_errorMessage(ctx context.Context, field graphql.CollectedField, obj *ItemResult) graphql.Marshaler {
+func (ec *executionContext) _ItemResult_errorMessage(ctx context.Context, field graphql.CollectedField, obj *data.ItemResult) graphql.Marshaler {
 	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() { ec.Tracer.EndFieldExecution(ctx) }()
 	rctx := &graphql.ResolverContext{
@@ -2003,7 +2006,7 @@ func (ec *executionContext) _ItemResult_errorMessage(ctx context.Context, field 
 }
 
 // nolint: vetshadow
-func (ec *executionContext) _ItemResult_success(ctx context.Context, field graphql.CollectedField, obj *ItemResult) graphql.Marshaler {
+func (ec *executionContext) _ItemResult_success(ctx context.Context, field graphql.CollectedField, obj *data.ItemResult) graphql.Marshaler {
 	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() { ec.Tracer.EndFieldExecution(ctx) }()
 	rctx := &graphql.ResolverContext{
@@ -2032,7 +2035,7 @@ func (ec *executionContext) _ItemResult_success(ctx context.Context, field graph
 var loginResultImplementors = []string{"LoginResult"}
 
 // nolint: gocyclo, errcheck, gas, goconst
-func (ec *executionContext) _LoginResult(ctx context.Context, sel ast.SelectionSet, obj *LoginResult) graphql.Marshaler {
+func (ec *executionContext) _LoginResult(ctx context.Context, sel ast.SelectionSet, obj *data.LoginResult) graphql.Marshaler {
 	fields := graphql.CollectFields(ctx, sel, loginResultImplementors)
 
 	out := graphql.NewOrderedMap(len(fields))
@@ -2066,7 +2069,7 @@ func (ec *executionContext) _LoginResult(ctx context.Context, sel ast.SelectionS
 }
 
 // nolint: vetshadow
-func (ec *executionContext) _LoginResult_data(ctx context.Context, field graphql.CollectedField, obj *LoginResult) graphql.Marshaler {
+func (ec *executionContext) _LoginResult_data(ctx context.Context, field graphql.CollectedField, obj *data.LoginResult) graphql.Marshaler {
 	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() { ec.Tracer.EndFieldExecution(ctx) }()
 	rctx := &graphql.ResolverContext{
@@ -2083,7 +2086,7 @@ func (ec *executionContext) _LoginResult_data(ctx context.Context, field graphql
 	if resTmp == nil {
 		return graphql.Null
 	}
-	res := resTmp.(*models.User)
+	res := resTmp.(*data.User)
 	rctx.Result = res
 	ctx = ec.Tracer.StartFieldChildExecution(ctx)
 
@@ -2095,7 +2098,7 @@ func (ec *executionContext) _LoginResult_data(ctx context.Context, field graphql
 }
 
 // nolint: vetshadow
-func (ec *executionContext) _LoginResult_errorMessage(ctx context.Context, field graphql.CollectedField, obj *LoginResult) graphql.Marshaler {
+func (ec *executionContext) _LoginResult_errorMessage(ctx context.Context, field graphql.CollectedField, obj *data.LoginResult) graphql.Marshaler {
 	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() { ec.Tracer.EndFieldExecution(ctx) }()
 	rctx := &graphql.ResolverContext{
@@ -2123,7 +2126,7 @@ func (ec *executionContext) _LoginResult_errorMessage(ctx context.Context, field
 }
 
 // nolint: vetshadow
-func (ec *executionContext) _LoginResult_success(ctx context.Context, field graphql.CollectedField, obj *LoginResult) graphql.Marshaler {
+func (ec *executionContext) _LoginResult_success(ctx context.Context, field graphql.CollectedField, obj *data.LoginResult) graphql.Marshaler {
 	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() { ec.Tracer.EndFieldExecution(ctx) }()
 	rctx := &graphql.ResolverContext{
@@ -2150,7 +2153,7 @@ func (ec *executionContext) _LoginResult_success(ctx context.Context, field grap
 }
 
 // nolint: vetshadow
-func (ec *executionContext) _LoginResult_token(ctx context.Context, field graphql.CollectedField, obj *LoginResult) graphql.Marshaler {
+func (ec *executionContext) _LoginResult_token(ctx context.Context, field graphql.CollectedField, obj *data.LoginResult) graphql.Marshaler {
 	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() { ec.Tracer.EndFieldExecution(ctx) }()
 	rctx := &graphql.ResolverContext{
@@ -2278,7 +2281,7 @@ func (ec *executionContext) _Mutation_addUserToSite(ctx context.Context, field g
 		}
 		return graphql.Null
 	}
-	res := resTmp.(GenericResult)
+	res := resTmp.(data.GenericResult)
 	rctx.Result = res
 	ctx = ec.Tracer.StartFieldChildExecution(ctx)
 
@@ -2312,7 +2315,7 @@ func (ec *executionContext) _Mutation_deleteAsset(ctx context.Context, field gra
 		}
 		return graphql.Null
 	}
-	res := resTmp.(GenericResult)
+	res := resTmp.(data.GenericResult)
 	rctx.Result = res
 	ctx = ec.Tracer.StartFieldChildExecution(ctx)
 
@@ -2346,7 +2349,7 @@ func (ec *executionContext) _Mutation_deleteItem(ctx context.Context, field grap
 		}
 		return graphql.Null
 	}
-	res := resTmp.(GenericResult)
+	res := resTmp.(data.GenericResult)
 	rctx.Result = res
 	ctx = ec.Tracer.StartFieldChildExecution(ctx)
 
@@ -2380,7 +2383,7 @@ func (ec *executionContext) _Mutation_deleteSite(ctx context.Context, field grap
 		}
 		return graphql.Null
 	}
-	res := resTmp.(GenericResult)
+	res := resTmp.(data.GenericResult)
 	rctx.Result = res
 	ctx = ec.Tracer.StartFieldChildExecution(ctx)
 
@@ -2406,7 +2409,7 @@ func (ec *executionContext) _Mutation_login(ctx context.Context, field graphql.C
 	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
 	resTmp := ec.FieldMiddleware(ctx, nil, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().Login(rctx, args["login"].(LoginInput))
+		return ec.resolvers.Mutation().Login(rctx, args["login"].(data.LoginInput))
 	})
 	if resTmp == nil {
 		if !ec.HasError(rctx) {
@@ -2414,7 +2417,7 @@ func (ec *executionContext) _Mutation_login(ctx context.Context, field graphql.C
 		}
 		return graphql.Null
 	}
-	res := resTmp.(LoginResult)
+	res := resTmp.(data.LoginResult)
 	rctx.Result = res
 	ctx = ec.Tracer.StartFieldChildExecution(ctx)
 
@@ -2440,7 +2443,7 @@ func (ec *executionContext) _Mutation_register(ctx context.Context, field graphq
 	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
 	resTmp := ec.FieldMiddleware(ctx, nil, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().Register(rctx, args["registration"].(RegisterInput))
+		return ec.resolvers.Mutation().Register(rctx, args["registration"].(data.RegisterInput))
 	})
 	if resTmp == nil {
 		if !ec.HasError(rctx) {
@@ -2448,7 +2451,7 @@ func (ec *executionContext) _Mutation_register(ctx context.Context, field graphq
 		}
 		return graphql.Null
 	}
-	res := resTmp.(UserResult)
+	res := resTmp.(data.UserResult)
 	rctx.Result = res
 	ctx = ec.Tracer.StartFieldChildExecution(ctx)
 
@@ -2474,7 +2477,7 @@ func (ec *executionContext) _Mutation_updateUser(ctx context.Context, field grap
 	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
 	resTmp := ec.FieldMiddleware(ctx, nil, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().UpdateUser(rctx, args["user"].(UserInput))
+		return ec.resolvers.Mutation().UpdateUser(rctx, args["user"].(data.UserInput))
 	})
 	if resTmp == nil {
 		if !ec.HasError(rctx) {
@@ -2482,7 +2485,7 @@ func (ec *executionContext) _Mutation_updateUser(ctx context.Context, field grap
 		}
 		return graphql.Null
 	}
-	res := resTmp.(UserResult)
+	res := resTmp.(data.UserResult)
 	rctx.Result = res
 	ctx = ec.Tracer.StartFieldChildExecution(ctx)
 
@@ -2508,7 +2511,7 @@ func (ec *executionContext) _Mutation_upsertItem(ctx context.Context, field grap
 	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
 	resTmp := ec.FieldMiddleware(ctx, nil, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().UpsertItem(rctx, args["item"].(ItemInput), args["siteId"].(string))
+		return ec.resolvers.Mutation().UpsertItem(rctx, args["item"].(data.ItemInput), args["siteId"].(string))
 	})
 	if resTmp == nil {
 		if !ec.HasError(rctx) {
@@ -2516,7 +2519,7 @@ func (ec *executionContext) _Mutation_upsertItem(ctx context.Context, field grap
 		}
 		return graphql.Null
 	}
-	res := resTmp.(ItemResult)
+	res := resTmp.(data.ItemResult)
 	rctx.Result = res
 	ctx = ec.Tracer.StartFieldChildExecution(ctx)
 
@@ -2542,7 +2545,7 @@ func (ec *executionContext) _Mutation_upsertSite(ctx context.Context, field grap
 	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
 	resTmp := ec.FieldMiddleware(ctx, nil, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().UpsertSite(rctx, args["site"].(SiteInput))
+		return ec.resolvers.Mutation().UpsertSite(rctx, args["site"].(data.SiteInput))
 	})
 	if resTmp == nil {
 		if !ec.HasError(rctx) {
@@ -2550,7 +2553,7 @@ func (ec *executionContext) _Mutation_upsertSite(ctx context.Context, field grap
 		}
 		return graphql.Null
 	}
-	res := resTmp.(SiteResult)
+	res := resTmp.(data.SiteResult)
 	rctx.Result = res
 	ctx = ec.Tracer.StartFieldChildExecution(ctx)
 
@@ -2657,7 +2660,7 @@ func (ec *executionContext) _Query_asset(ctx context.Context, field graphql.Coll
 	if resTmp == nil {
 		return graphql.Null
 	}
-	res := resTmp.(*models.Asset)
+	res := resTmp.(*data.Asset)
 	rctx.Result = res
 	ctx = ec.Tracer.StartFieldChildExecution(ctx)
 
@@ -2695,7 +2698,7 @@ func (ec *executionContext) _Query_items(ctx context.Context, field graphql.Coll
 		}
 		return graphql.Null
 	}
-	res := resTmp.([]*models.Item)
+	res := resTmp.([]data.Item)
 	rctx.Result = res
 	ctx = ec.Tracer.StartFieldChildExecution(ctx)
 
@@ -2711,7 +2714,7 @@ func (ec *executionContext) _Query_items(ctx context.Context, field graphql.Coll
 		idx1 := idx1
 		rctx := &graphql.ResolverContext{
 			Index:  &idx1,
-			Result: res[idx1],
+			Result: &res[idx1],
 		}
 		ctx := graphql.WithResolverContext(ctx, rctx)
 		f := func(idx1 int) {
@@ -2720,11 +2723,7 @@ func (ec *executionContext) _Query_items(ctx context.Context, field graphql.Coll
 			}
 			arr1[idx1] = func() graphql.Marshaler {
 
-				if res[idx1] == nil {
-					return graphql.Null
-				}
-
-				return ec._Item(ctx, field.Selections, res[idx1])
+				return ec._Item(ctx, field.Selections, &res[idx1])
 			}()
 		}
 		if isLen1 {
@@ -2762,7 +2761,7 @@ func (ec *executionContext) _Query_item(ctx context.Context, field graphql.Colle
 	if resTmp == nil {
 		return graphql.Null
 	}
-	res := resTmp.(*models.Item)
+	res := resTmp.(*data.Item)
 	rctx.Result = res
 	ctx = ec.Tracer.StartFieldChildExecution(ctx)
 
@@ -2791,7 +2790,7 @@ func (ec *executionContext) _Query_me(ctx context.Context, field graphql.Collect
 	if resTmp == nil {
 		return graphql.Null
 	}
-	res := resTmp.(*models.User)
+	res := resTmp.(*data.User)
 	rctx.Result = res
 	ctx = ec.Tracer.StartFieldChildExecution(ctx)
 
@@ -2826,7 +2825,7 @@ func (ec *executionContext) _Query_site(ctx context.Context, field graphql.Colle
 	if resTmp == nil {
 		return graphql.Null
 	}
-	res := resTmp.(*models.Site)
+	res := resTmp.(*data.Site)
 	rctx.Result = res
 	ctx = ec.Tracer.StartFieldChildExecution(ctx)
 
@@ -2858,7 +2857,7 @@ func (ec *executionContext) _Query_sites(ctx context.Context, field graphql.Coll
 		}
 		return graphql.Null
 	}
-	res := resTmp.([]*models.Site)
+	res := resTmp.([]data.Site)
 	rctx.Result = res
 	ctx = ec.Tracer.StartFieldChildExecution(ctx)
 
@@ -2874,7 +2873,7 @@ func (ec *executionContext) _Query_sites(ctx context.Context, field graphql.Coll
 		idx1 := idx1
 		rctx := &graphql.ResolverContext{
 			Index:  &idx1,
-			Result: res[idx1],
+			Result: &res[idx1],
 		}
 		ctx := graphql.WithResolverContext(ctx, rctx)
 		f := func(idx1 int) {
@@ -2883,11 +2882,7 @@ func (ec *executionContext) _Query_sites(ctx context.Context, field graphql.Coll
 			}
 			arr1[idx1] = func() graphql.Marshaler {
 
-				if res[idx1] == nil {
-					return graphql.Null
-				}
-
-				return ec._Site(ctx, field.Selections, res[idx1])
+				return ec._Site(ctx, field.Selections, &res[idx1])
 			}()
 		}
 		if isLen1 {
@@ -2968,7 +2963,7 @@ func (ec *executionContext) _Query___schema(ctx context.Context, field graphql.C
 var siteImplementors = []string{"Site"}
 
 // nolint: gocyclo, errcheck, gas, goconst
-func (ec *executionContext) _Site(ctx context.Context, sel ast.SelectionSet, obj *models.Site) graphql.Marshaler {
+func (ec *executionContext) _Site(ctx context.Context, sel ast.SelectionSet, obj *data.Site) graphql.Marshaler {
 	fields := graphql.CollectFields(ctx, sel, siteImplementors)
 
 	var wg sync.WaitGroup
@@ -3023,20 +3018,28 @@ func (ec *executionContext) _Site(ctx context.Context, sel ast.SelectionSet, obj
 				wg.Done()
 			}(i, field)
 		case "createdAt":
-			out.Values[i] = ec._Site_createdAt(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				invalid = true
-			}
+			wg.Add(1)
+			go func(i int, field graphql.CollectedField) {
+				out.Values[i] = ec._Site_createdAt(ctx, field, obj)
+				if out.Values[i] == graphql.Null {
+					invalid = true
+				}
+				wg.Done()
+			}(i, field)
 		case "createdBy":
 			out.Values[i] = ec._Site_createdBy(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				invalid = true
 			}
 		case "lastUpdatedAt":
-			out.Values[i] = ec._Site_lastUpdatedAt(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				invalid = true
-			}
+			wg.Add(1)
+			go func(i int, field graphql.CollectedField) {
+				out.Values[i] = ec._Site_lastUpdatedAt(ctx, field, obj)
+				if out.Values[i] == graphql.Null {
+					invalid = true
+				}
+				wg.Done()
+			}(i, field)
 		case "lastUpdatedBy":
 			out.Values[i] = ec._Site_lastUpdatedBy(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
@@ -3054,7 +3057,7 @@ func (ec *executionContext) _Site(ctx context.Context, sel ast.SelectionSet, obj
 }
 
 // nolint: vetshadow
-func (ec *executionContext) _Site_id(ctx context.Context, field graphql.CollectedField, obj *models.Site) graphql.Marshaler {
+func (ec *executionContext) _Site_id(ctx context.Context, field graphql.CollectedField, obj *data.Site) graphql.Marshaler {
 	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() { ec.Tracer.EndFieldExecution(ctx) }()
 	rctx := &graphql.ResolverContext{
@@ -3081,7 +3084,7 @@ func (ec *executionContext) _Site_id(ctx context.Context, field graphql.Collecte
 }
 
 // nolint: vetshadow
-func (ec *executionContext) _Site_name(ctx context.Context, field graphql.CollectedField, obj *models.Site) graphql.Marshaler {
+func (ec *executionContext) _Site_name(ctx context.Context, field graphql.CollectedField, obj *data.Site) graphql.Marshaler {
 	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() { ec.Tracer.EndFieldExecution(ctx) }()
 	rctx := &graphql.ResolverContext{
@@ -3108,7 +3111,7 @@ func (ec *executionContext) _Site_name(ctx context.Context, field graphql.Collec
 }
 
 // nolint: vetshadow
-func (ec *executionContext) _Site_data(ctx context.Context, field graphql.CollectedField, obj *models.Site) graphql.Marshaler {
+func (ec *executionContext) _Site_data(ctx context.Context, field graphql.CollectedField, obj *data.Site) graphql.Marshaler {
 	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() { ec.Tracer.EndFieldExecution(ctx) }()
 	rctx := &graphql.ResolverContext{
@@ -3135,7 +3138,7 @@ func (ec *executionContext) _Site_data(ctx context.Context, field graphql.Collec
 }
 
 // nolint: vetshadow
-func (ec *executionContext) _Site_assets(ctx context.Context, field graphql.CollectedField, obj *models.Site) graphql.Marshaler {
+func (ec *executionContext) _Site_assets(ctx context.Context, field graphql.CollectedField, obj *data.Site) graphql.Marshaler {
 	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() { ec.Tracer.EndFieldExecution(ctx) }()
 	rctx := &graphql.ResolverContext{
@@ -3155,7 +3158,7 @@ func (ec *executionContext) _Site_assets(ctx context.Context, field graphql.Coll
 		}
 		return graphql.Null
 	}
-	res := resTmp.([]*models.Asset)
+	res := resTmp.([]data.Asset)
 	rctx.Result = res
 	ctx = ec.Tracer.StartFieldChildExecution(ctx)
 
@@ -3171,7 +3174,7 @@ func (ec *executionContext) _Site_assets(ctx context.Context, field graphql.Coll
 		idx1 := idx1
 		rctx := &graphql.ResolverContext{
 			Index:  &idx1,
-			Result: res[idx1],
+			Result: &res[idx1],
 		}
 		ctx := graphql.WithResolverContext(ctx, rctx)
 		f := func(idx1 int) {
@@ -3180,11 +3183,7 @@ func (ec *executionContext) _Site_assets(ctx context.Context, field graphql.Coll
 			}
 			arr1[idx1] = func() graphql.Marshaler {
 
-				if res[idx1] == nil {
-					return graphql.Null
-				}
-
-				return ec._Asset(ctx, field.Selections, res[idx1])
+				return ec._Asset(ctx, field.Selections, &res[idx1])
 			}()
 		}
 		if isLen1 {
@@ -3199,7 +3198,7 @@ func (ec *executionContext) _Site_assets(ctx context.Context, field graphql.Coll
 }
 
 // nolint: vetshadow
-func (ec *executionContext) _Site_groups(ctx context.Context, field graphql.CollectedField, obj *models.Site) graphql.Marshaler {
+func (ec *executionContext) _Site_groups(ctx context.Context, field graphql.CollectedField, obj *data.Site) graphql.Marshaler {
 	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() { ec.Tracer.EndFieldExecution(ctx) }()
 	rctx := &graphql.ResolverContext{
@@ -3219,7 +3218,7 @@ func (ec *executionContext) _Site_groups(ctx context.Context, field graphql.Coll
 		}
 		return graphql.Null
 	}
-	res := resTmp.([]*models.Group)
+	res := resTmp.([]data.Group)
 	rctx.Result = res
 	ctx = ec.Tracer.StartFieldChildExecution(ctx)
 
@@ -3235,7 +3234,7 @@ func (ec *executionContext) _Site_groups(ctx context.Context, field graphql.Coll
 		idx1 := idx1
 		rctx := &graphql.ResolverContext{
 			Index:  &idx1,
-			Result: res[idx1],
+			Result: &res[idx1],
 		}
 		ctx := graphql.WithResolverContext(ctx, rctx)
 		f := func(idx1 int) {
@@ -3244,11 +3243,7 @@ func (ec *executionContext) _Site_groups(ctx context.Context, field graphql.Coll
 			}
 			arr1[idx1] = func() graphql.Marshaler {
 
-				if res[idx1] == nil {
-					return graphql.Null
-				}
-
-				return ec._Group(ctx, field.Selections, res[idx1])
+				return ec._Group(ctx, field.Selections, &res[idx1])
 			}()
 		}
 		if isLen1 {
@@ -3263,7 +3258,7 @@ func (ec *executionContext) _Site_groups(ctx context.Context, field graphql.Coll
 }
 
 // nolint: vetshadow
-func (ec *executionContext) _Site_items(ctx context.Context, field graphql.CollectedField, obj *models.Site) graphql.Marshaler {
+func (ec *executionContext) _Site_items(ctx context.Context, field graphql.CollectedField, obj *data.Site) graphql.Marshaler {
 	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() { ec.Tracer.EndFieldExecution(ctx) }()
 	rctx := &graphql.ResolverContext{
@@ -3283,7 +3278,7 @@ func (ec *executionContext) _Site_items(ctx context.Context, field graphql.Colle
 		}
 		return graphql.Null
 	}
-	res := resTmp.([]*models.Item)
+	res := resTmp.([]data.Item)
 	rctx.Result = res
 	ctx = ec.Tracer.StartFieldChildExecution(ctx)
 
@@ -3299,7 +3294,7 @@ func (ec *executionContext) _Site_items(ctx context.Context, field graphql.Colle
 		idx1 := idx1
 		rctx := &graphql.ResolverContext{
 			Index:  &idx1,
-			Result: res[idx1],
+			Result: &res[idx1],
 		}
 		ctx := graphql.WithResolverContext(ctx, rctx)
 		f := func(idx1 int) {
@@ -3308,11 +3303,7 @@ func (ec *executionContext) _Site_items(ctx context.Context, field graphql.Colle
 			}
 			arr1[idx1] = func() graphql.Marshaler {
 
-				if res[idx1] == nil {
-					return graphql.Null
-				}
-
-				return ec._Item(ctx, field.Selections, res[idx1])
+				return ec._Item(ctx, field.Selections, &res[idx1])
 			}()
 		}
 		if isLen1 {
@@ -3327,7 +3318,7 @@ func (ec *executionContext) _Site_items(ctx context.Context, field graphql.Colle
 }
 
 // nolint: vetshadow
-func (ec *executionContext) _Site_createdAt(ctx context.Context, field graphql.CollectedField, obj *models.Site) graphql.Marshaler {
+func (ec *executionContext) _Site_createdAt(ctx context.Context, field graphql.CollectedField, obj *data.Site) graphql.Marshaler {
 	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() { ec.Tracer.EndFieldExecution(ctx) }()
 	rctx := &graphql.ResolverContext{
@@ -3339,7 +3330,7 @@ func (ec *executionContext) _Site_createdAt(ctx context.Context, field graphql.C
 	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
 	resTmp := ec.FieldMiddleware(ctx, obj, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.CreatedAt, nil
+		return ec.resolvers.Site().CreatedAt(rctx, obj)
 	})
 	if resTmp == nil {
 		if !ec.HasError(rctx) {
@@ -3354,7 +3345,7 @@ func (ec *executionContext) _Site_createdAt(ctx context.Context, field graphql.C
 }
 
 // nolint: vetshadow
-func (ec *executionContext) _Site_createdBy(ctx context.Context, field graphql.CollectedField, obj *models.Site) graphql.Marshaler {
+func (ec *executionContext) _Site_createdBy(ctx context.Context, field graphql.CollectedField, obj *data.Site) graphql.Marshaler {
 	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() { ec.Tracer.EndFieldExecution(ctx) }()
 	rctx := &graphql.ResolverContext{
@@ -3381,7 +3372,7 @@ func (ec *executionContext) _Site_createdBy(ctx context.Context, field graphql.C
 }
 
 // nolint: vetshadow
-func (ec *executionContext) _Site_lastUpdatedAt(ctx context.Context, field graphql.CollectedField, obj *models.Site) graphql.Marshaler {
+func (ec *executionContext) _Site_lastUpdatedAt(ctx context.Context, field graphql.CollectedField, obj *data.Site) graphql.Marshaler {
 	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() { ec.Tracer.EndFieldExecution(ctx) }()
 	rctx := &graphql.ResolverContext{
@@ -3393,7 +3384,7 @@ func (ec *executionContext) _Site_lastUpdatedAt(ctx context.Context, field graph
 	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
 	resTmp := ec.FieldMiddleware(ctx, obj, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.LastUpdatedAt, nil
+		return ec.resolvers.Site().LastUpdatedAt(rctx, obj)
 	})
 	if resTmp == nil {
 		if !ec.HasError(rctx) {
@@ -3408,7 +3399,7 @@ func (ec *executionContext) _Site_lastUpdatedAt(ctx context.Context, field graph
 }
 
 // nolint: vetshadow
-func (ec *executionContext) _Site_lastUpdatedBy(ctx context.Context, field graphql.CollectedField, obj *models.Site) graphql.Marshaler {
+func (ec *executionContext) _Site_lastUpdatedBy(ctx context.Context, field graphql.CollectedField, obj *data.Site) graphql.Marshaler {
 	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() { ec.Tracer.EndFieldExecution(ctx) }()
 	rctx := &graphql.ResolverContext{
@@ -3437,7 +3428,7 @@ func (ec *executionContext) _Site_lastUpdatedBy(ctx context.Context, field graph
 var siteResultImplementors = []string{"SiteResult"}
 
 // nolint: gocyclo, errcheck, gas, goconst
-func (ec *executionContext) _SiteResult(ctx context.Context, sel ast.SelectionSet, obj *SiteResult) graphql.Marshaler {
+func (ec *executionContext) _SiteResult(ctx context.Context, sel ast.SelectionSet, obj *data.SiteResult) graphql.Marshaler {
 	fields := graphql.CollectFields(ctx, sel, siteResultImplementors)
 
 	out := graphql.NewOrderedMap(len(fields))
@@ -3469,7 +3460,7 @@ func (ec *executionContext) _SiteResult(ctx context.Context, sel ast.SelectionSe
 }
 
 // nolint: vetshadow
-func (ec *executionContext) _SiteResult_data(ctx context.Context, field graphql.CollectedField, obj *SiteResult) graphql.Marshaler {
+func (ec *executionContext) _SiteResult_data(ctx context.Context, field graphql.CollectedField, obj *data.SiteResult) graphql.Marshaler {
 	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() { ec.Tracer.EndFieldExecution(ctx) }()
 	rctx := &graphql.ResolverContext{
@@ -3486,7 +3477,7 @@ func (ec *executionContext) _SiteResult_data(ctx context.Context, field graphql.
 	if resTmp == nil {
 		return graphql.Null
 	}
-	res := resTmp.(*models.Site)
+	res := resTmp.(*data.Site)
 	rctx.Result = res
 	ctx = ec.Tracer.StartFieldChildExecution(ctx)
 
@@ -3498,7 +3489,7 @@ func (ec *executionContext) _SiteResult_data(ctx context.Context, field graphql.
 }
 
 // nolint: vetshadow
-func (ec *executionContext) _SiteResult_errorMessage(ctx context.Context, field graphql.CollectedField, obj *SiteResult) graphql.Marshaler {
+func (ec *executionContext) _SiteResult_errorMessage(ctx context.Context, field graphql.CollectedField, obj *data.SiteResult) graphql.Marshaler {
 	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() { ec.Tracer.EndFieldExecution(ctx) }()
 	rctx := &graphql.ResolverContext{
@@ -3526,7 +3517,7 @@ func (ec *executionContext) _SiteResult_errorMessage(ctx context.Context, field 
 }
 
 // nolint: vetshadow
-func (ec *executionContext) _SiteResult_success(ctx context.Context, field graphql.CollectedField, obj *SiteResult) graphql.Marshaler {
+func (ec *executionContext) _SiteResult_success(ctx context.Context, field graphql.CollectedField, obj *data.SiteResult) graphql.Marshaler {
 	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() { ec.Tracer.EndFieldExecution(ctx) }()
 	rctx := &graphql.ResolverContext{
@@ -3555,7 +3546,7 @@ func (ec *executionContext) _SiteResult_success(ctx context.Context, field graph
 var userImplementors = []string{"User"}
 
 // nolint: gocyclo, errcheck, gas, goconst
-func (ec *executionContext) _User(ctx context.Context, sel ast.SelectionSet, obj *models.User) graphql.Marshaler {
+func (ec *executionContext) _User(ctx context.Context, sel ast.SelectionSet, obj *data.User) graphql.Marshaler {
 	fields := graphql.CollectFields(ctx, sel, userImplementors)
 
 	var wg sync.WaitGroup
@@ -3603,7 +3594,7 @@ func (ec *executionContext) _User(ctx context.Context, sel ast.SelectionSet, obj
 }
 
 // nolint: vetshadow
-func (ec *executionContext) _User_id(ctx context.Context, field graphql.CollectedField, obj *models.User) graphql.Marshaler {
+func (ec *executionContext) _User_id(ctx context.Context, field graphql.CollectedField, obj *data.User) graphql.Marshaler {
 	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() { ec.Tracer.EndFieldExecution(ctx) }()
 	rctx := &graphql.ResolverContext{
@@ -3630,7 +3621,7 @@ func (ec *executionContext) _User_id(ctx context.Context, field graphql.Collecte
 }
 
 // nolint: vetshadow
-func (ec *executionContext) _User_email(ctx context.Context, field graphql.CollectedField, obj *models.User) graphql.Marshaler {
+func (ec *executionContext) _User_email(ctx context.Context, field graphql.CollectedField, obj *data.User) graphql.Marshaler {
 	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() { ec.Tracer.EndFieldExecution(ctx) }()
 	rctx := &graphql.ResolverContext{
@@ -3657,7 +3648,7 @@ func (ec *executionContext) _User_email(ctx context.Context, field graphql.Colle
 }
 
 // nolint: vetshadow
-func (ec *executionContext) _User_data(ctx context.Context, field graphql.CollectedField, obj *models.User) graphql.Marshaler {
+func (ec *executionContext) _User_data(ctx context.Context, field graphql.CollectedField, obj *data.User) graphql.Marshaler {
 	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() { ec.Tracer.EndFieldExecution(ctx) }()
 	rctx := &graphql.ResolverContext{
@@ -3684,7 +3675,7 @@ func (ec *executionContext) _User_data(ctx context.Context, field graphql.Collec
 }
 
 // nolint: vetshadow
-func (ec *executionContext) _User_sites(ctx context.Context, field graphql.CollectedField, obj *models.User) graphql.Marshaler {
+func (ec *executionContext) _User_sites(ctx context.Context, field graphql.CollectedField, obj *data.User) graphql.Marshaler {
 	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() { ec.Tracer.EndFieldExecution(ctx) }()
 	rctx := &graphql.ResolverContext{
@@ -3704,7 +3695,7 @@ func (ec *executionContext) _User_sites(ctx context.Context, field graphql.Colle
 		}
 		return graphql.Null
 	}
-	res := resTmp.([]*models.Site)
+	res := resTmp.([]data.Site)
 	rctx.Result = res
 	ctx = ec.Tracer.StartFieldChildExecution(ctx)
 
@@ -3720,7 +3711,7 @@ func (ec *executionContext) _User_sites(ctx context.Context, field graphql.Colle
 		idx1 := idx1
 		rctx := &graphql.ResolverContext{
 			Index:  &idx1,
-			Result: res[idx1],
+			Result: &res[idx1],
 		}
 		ctx := graphql.WithResolverContext(ctx, rctx)
 		f := func(idx1 int) {
@@ -3729,11 +3720,7 @@ func (ec *executionContext) _User_sites(ctx context.Context, field graphql.Colle
 			}
 			arr1[idx1] = func() graphql.Marshaler {
 
-				if res[idx1] == nil {
-					return graphql.Null
-				}
-
-				return ec._Site(ctx, field.Selections, res[idx1])
+				return ec._Site(ctx, field.Selections, &res[idx1])
 			}()
 		}
 		if isLen1 {
@@ -3750,7 +3737,7 @@ func (ec *executionContext) _User_sites(ctx context.Context, field graphql.Colle
 var userResultImplementors = []string{"UserResult"}
 
 // nolint: gocyclo, errcheck, gas, goconst
-func (ec *executionContext) _UserResult(ctx context.Context, sel ast.SelectionSet, obj *UserResult) graphql.Marshaler {
+func (ec *executionContext) _UserResult(ctx context.Context, sel ast.SelectionSet, obj *data.UserResult) graphql.Marshaler {
 	fields := graphql.CollectFields(ctx, sel, userResultImplementors)
 
 	out := graphql.NewOrderedMap(len(fields))
@@ -3782,7 +3769,7 @@ func (ec *executionContext) _UserResult(ctx context.Context, sel ast.SelectionSe
 }
 
 // nolint: vetshadow
-func (ec *executionContext) _UserResult_data(ctx context.Context, field graphql.CollectedField, obj *UserResult) graphql.Marshaler {
+func (ec *executionContext) _UserResult_data(ctx context.Context, field graphql.CollectedField, obj *data.UserResult) graphql.Marshaler {
 	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() { ec.Tracer.EndFieldExecution(ctx) }()
 	rctx := &graphql.ResolverContext{
@@ -3799,7 +3786,7 @@ func (ec *executionContext) _UserResult_data(ctx context.Context, field graphql.
 	if resTmp == nil {
 		return graphql.Null
 	}
-	res := resTmp.(*models.User)
+	res := resTmp.(*data.User)
 	rctx.Result = res
 	ctx = ec.Tracer.StartFieldChildExecution(ctx)
 
@@ -3811,7 +3798,7 @@ func (ec *executionContext) _UserResult_data(ctx context.Context, field graphql.
 }
 
 // nolint: vetshadow
-func (ec *executionContext) _UserResult_errorMessage(ctx context.Context, field graphql.CollectedField, obj *UserResult) graphql.Marshaler {
+func (ec *executionContext) _UserResult_errorMessage(ctx context.Context, field graphql.CollectedField, obj *data.UserResult) graphql.Marshaler {
 	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() { ec.Tracer.EndFieldExecution(ctx) }()
 	rctx := &graphql.ResolverContext{
@@ -3839,7 +3826,7 @@ func (ec *executionContext) _UserResult_errorMessage(ctx context.Context, field 
 }
 
 // nolint: vetshadow
-func (ec *executionContext) _UserResult_success(ctx context.Context, field graphql.CollectedField, obj *UserResult) graphql.Marshaler {
+func (ec *executionContext) _UserResult_success(ctx context.Context, field graphql.CollectedField, obj *data.UserResult) graphql.Marshaler {
 	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() { ec.Tracer.EndFieldExecution(ctx) }()
 	rctx := &graphql.ResolverContext{
@@ -5310,8 +5297,8 @@ func (ec *executionContext) ___Type_ofType(ctx context.Context, field graphql.Co
 	return ec.___Type(ctx, field.Selections, res)
 }
 
-func UnmarshalItemInput(v interface{}) (ItemInput, error) {
-	var it ItemInput
+func UnmarshalItemInput(v interface{}) (data.ItemInput, error) {
+	var it data.ItemInput
 	var asMap = v.(map[string]interface{})
 
 	for k, v := range asMap {
@@ -5362,8 +5349,8 @@ func UnmarshalItemInput(v interface{}) (ItemInput, error) {
 	return it, nil
 }
 
-func UnmarshalLoginInput(v interface{}) (LoginInput, error) {
-	var it LoginInput
+func UnmarshalLoginInput(v interface{}) (data.LoginInput, error) {
+	var it data.LoginInput
 	var asMap = v.(map[string]interface{})
 
 	for k, v := range asMap {
@@ -5386,8 +5373,8 @@ func UnmarshalLoginInput(v interface{}) (LoginInput, error) {
 	return it, nil
 }
 
-func UnmarshalRegisterInput(v interface{}) (RegisterInput, error) {
-	var it RegisterInput
+func UnmarshalRegisterInput(v interface{}) (data.RegisterInput, error) {
+	var it data.RegisterInput
 	var asMap = v.(map[string]interface{})
 
 	for k, v := range asMap {
@@ -5416,8 +5403,8 @@ func UnmarshalRegisterInput(v interface{}) (RegisterInput, error) {
 	return it, nil
 }
 
-func UnmarshalSiteInput(v interface{}) (SiteInput, error) {
-	var it SiteInput
+func UnmarshalSiteInput(v interface{}) (data.SiteInput, error) {
+	var it data.SiteInput
 	var asMap = v.(map[string]interface{})
 
 	for k, v := range asMap {
@@ -5451,8 +5438,8 @@ func UnmarshalSiteInput(v interface{}) (SiteInput, error) {
 	return it, nil
 }
 
-func UnmarshalUserInput(v interface{}) (UserInput, error) {
-	var it UserInput
+func UnmarshalUserInput(v interface{}) (data.UserInput, error) {
+	var it data.UserInput
 	var asMap = v.(map[string]interface{})
 
 	for k, v := range asMap {
@@ -5517,9 +5504,9 @@ type Site {
     id: ID!
     name: String!
     data: StringifiedJsonObject!
-    assets: [Asset]!
-    groups: [Group]!
-    items: [Item]!
+    assets: [Asset!]!
+    groups: [Group!]!
+    items: [Item!]!
     createdAt: String!
     createdBy: String!
     lastUpdatedAt: String!
@@ -5532,7 +5519,7 @@ type Asset {
     state: String!
     fileName: String!
     extension: String!
-    items: [Item]!
+    items: [Item!]!
     createdAt: String!
     createdBy: String!
     lastUpdatedAt: String!
@@ -5541,13 +5528,13 @@ type Asset {
 
 type Group {
     name: String!
-    items: [Item]!
+    items: [Item!]!
 }
 
 type Item  {
     id: ID!
     data: StringifiedJsonObject!
-    groups: [Group]!
+    groups: [Group!]!
     createdAt: String!
     createdBy: String!
     lastUpdatedAt: String!
@@ -5558,7 +5545,7 @@ type User {
     id: ID!
     email: String!
     data: StringifiedJsonObject!
-    sites: [Site]!
+    sites: [Site!]!
 }
 
 input UserInput {
@@ -5623,11 +5610,11 @@ type GenericResult {
 
 type Query {
     asset(assetId: String!): Asset
-    items(siteId: String!): [Item]!
+    items(siteId: String!): [Item!]!
     item(itemId: String!): Item
     me: User
     site(siteId: String!): Site
-    sites: [Site]!
+    sites: [Site!]!
 }
 
 type Mutation {

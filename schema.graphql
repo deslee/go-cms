@@ -4,9 +4,9 @@ type Site {
     id: ID!
     name: String!
     data: StringifiedJsonObject!
-    assets: [Asset]!
-    groups: [Group]!
-    items: [Item]!
+    assets: [Asset!]!
+    groups: [Group!]!
+    items: [Item!]!
     createdAt: String!
     createdBy: String!
     lastUpdatedAt: String!
@@ -19,7 +19,7 @@ type Asset {
     state: String!
     fileName: String!
     extension: String!
-    items: [Item]!
+    items: [Item!]!
     createdAt: String!
     createdBy: String!
     lastUpdatedAt: String!
@@ -28,13 +28,13 @@ type Asset {
 
 type Group {
     name: String!
-    items: [Item]!
+    items: [Item!]!
 }
 
 type Item  {
     id: ID!
     data: StringifiedJsonObject!
-    groups: [Group]!
+    groups: [Group!]!
     createdAt: String!
     createdBy: String!
     lastUpdatedAt: String!
@@ -45,7 +45,7 @@ type User {
     id: ID!
     email: String!
     data: StringifiedJsonObject!
-    sites: [Site]!
+    sites: [Site!]!
 }
 
 input UserInput {
@@ -110,11 +110,11 @@ type GenericResult {
 
 type Query {
     asset(assetId: String!): Asset
-    items(siteId: String!): [Item]!
+    items(siteId: String!): [Item!]!
     item(itemId: String!): Item
     me: User
     site(siteId: String!): Site
-    sites: [Site]!
+    sites: [Site!]!
 }
 
 type Mutation {
