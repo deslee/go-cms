@@ -3,7 +3,6 @@ package data
 import (
 	"context"
 	"database/sql"
-	"time"
 )
 
 type Asset struct {
@@ -11,10 +10,7 @@ type Asset struct {
 	State         string
 	Type          string
 	Data          string
-	CreatedAt     time.Time
-	CreatedBy     string
-	LastUpdatedAt time.Time
-	LastUpdatedBy string
+	AuditFields
 }
 
 func (asset Asset) FileName() string {

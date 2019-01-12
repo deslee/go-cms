@@ -3,9 +3,9 @@ package cms
 import (
 	"context"
 	"database/sql"
-	"time"
-
 	"github.com/deslee/cms/data"
+	"log"
+	"runtime/debug"
 )
 
 type Resolver struct {
@@ -39,12 +39,6 @@ type assetResolver struct{ *Resolver }
 func (r *assetResolver) Items(ctx context.Context, obj *data.Asset) ([]data.Item, error) {
 	return obj.Items(ctx, r.DB)
 }
-func (r *assetResolver) CreatedAt(ctx context.Context, obj *data.Asset) (string, error) {
-	return obj.CreatedAt.Format(time.RFC3339), nil
-}
-func (r *assetResolver) LastUpdatedAt(ctx context.Context, obj *data.Asset) (string, error) {
-	return obj.LastUpdatedAt.Format(time.RFC3339), nil
-}
 
 type groupResolver struct{ *Resolver }
 
@@ -57,41 +51,98 @@ type itemResolver struct{ *Resolver }
 func (r *itemResolver) Groups(ctx context.Context, obj *data.Item) ([]data.Group, error) {
 	return obj.Groups(ctx, r.DB)
 }
-func (r *itemResolver) CreatedAt(ctx context.Context, obj *data.Item) (string, error) {
-	return obj.CreatedAt.Format(time.RFC3339), nil
-}
-func (r *itemResolver) LastUpdatedAt(ctx context.Context, obj *data.Item) (string, error) {
-	return obj.LastUpdatedAt.Format(time.RFC3339), nil
-}
 
 type mutationResolver struct{ *Resolver }
 
-func (r *mutationResolver) AddUserToSite(ctx context.Context, userId string, siteId string) (data.GenericResult, error) {
-	return data.AddUserToSite(ctx, r.DB, userId, siteId)
+func (r *mutationResolver) AddUserToSite(ctx context.Context, userId string, siteId string) (res data.GenericResult, err error) {
+	defer func(){
+		if r := recover(); r != nil {
+			log.Printf("%s %s", r, debug.Stack())
+			res = data.GenericError()
+		}
+	}()
+	res, err = data.AddUserToSite(ctx, r.DB, userId, siteId)
+	return res, err
 }
-func (r *mutationResolver) DeleteAsset(ctx context.Context, assetId string) (data.GenericResult, error) {
-	return data.DeleteAsset(ctx, r.DB, assetId)
+func (r *mutationResolver) DeleteAsset(ctx context.Context, assetId string) (res data.GenericResult, err error) {
+	defer func(){
+		if r := recover(); r != nil {
+			log.Printf("%s %s", r, debug.Stack())
+			res = data.GenericError()
+		}
+	}()
+	res, err = data.DeleteAsset(ctx, r.DB, assetId)
+	return res, err
 }
-func (r *mutationResolver) DeleteItem(ctx context.Context, itemId string) (data.GenericResult, error) {
-	return data.DeleteItem(ctx, r.DB, itemId)
+func (r *mutationResolver) DeleteItem(ctx context.Context, itemId string) (res data.GenericResult, err error) {
+	defer func(){
+		if r := recover(); r != nil {
+			log.Printf("%s %s", r, debug.Stack())
+			res = data.GenericError()
+		}
+	}()
+	res, err = data.DeleteItem(ctx, r.DB, itemId)
+	return res, err
 }
-func (r *mutationResolver) DeleteSite(ctx context.Context, siteId string) (data.GenericResult, error) {
-	return data.DeleteSite(ctx, r.DB, siteId)
+func (r *mutationResolver) DeleteSite(ctx context.Context, siteId string) (res data.GenericResult, err error) {
+	defer func(){
+		if r := recover(); r != nil {
+			log.Printf("%s %s", r, debug.Stack())
+			res = data.GenericError()
+		}
+	}()
+	res, err = data.DeleteSite(ctx, r.DB, siteId)
+	return res, err
 }
-func (r *mutationResolver) Login(ctx context.Context, login data.LoginInput) (data.LoginResult, error) {
-	return data.Login(ctx, r.DB, login)
+func (r *mutationResolver) Login(ctx context.Context, login data.LoginInput) (res data.LoginResult, err error) {
+	defer func(){
+		if r := recover(); r != nil {
+			log.Printf("%s %s", r, debug.Stack())
+			res = data.LoginResult{GenericResult: data.GenericError()}
+		}
+	}()
+	res, err = data.Login(ctx, r.DB, login)
+	return res, err
 }
-func (r *mutationResolver) Register(ctx context.Context, registration data.RegisterInput) (data.UserResult, error) {
-	return data.Register(ctx, r.DB, registration)
+func (r *mutationResolver) Register(ctx context.Context, registration data.RegisterInput) (res data.UserResult, err error) {
+	defer func(){
+		if r := recover(); r != nil {
+			log.Printf("%s %s", r, debug.Stack())
+			res = data.UserResult{GenericResult: data.GenericError()}
+		}
+	}()
+	res, err = data.Register(ctx, r.DB, registration)
+	return res, err
 }
-func (r *mutationResolver) UpdateUser(ctx context.Context, user data.UserInput) (data.UserResult, error) {
-	return data.UpdateUser(ctx, r.DB, user)
+func (r *mutationResolver) UpdateUser(ctx context.Context, user data.UserInput) (res data.UserResult, err error) {
+	defer func(){
+		if r := recover(); r != nil {
+			log.Printf("%s %s", r, debug.Stack())
+			res = data.UserResult{GenericResult: data.GenericError()}
+		}
+	}()
+	res, err = data.UpdateUser(ctx, r.DB, user)
+	return res, err
 }
-func (r *mutationResolver) UpsertItem(ctx context.Context, item data.ItemInput, siteId string) (data.ItemResult, error) {
-	return data.UpsertItem(ctx, r.DB, item, siteId)
+func (r *mutationResolver) UpsertItem(ctx context.Context, item data.ItemInput, siteId string) (res data.ItemResult, err error) {
+	defer func(){
+		if r := recover(); r != nil {
+			log.Printf("%s %s", r, debug.Stack())
+			res = data.ItemResult{GenericResult: data.GenericError()}
+		}
+	}()
+	res, err = data.UpsertItem(ctx, r.DB, item, siteId)
+	return res, err
 }
-func (r *mutationResolver) UpsertSite(ctx context.Context, site data.SiteInput) (data.SiteResult, error) {
-	return data.UpsertSite(ctx, r.DB, site)
+func (r *mutationResolver) UpsertSite(ctx context.Context, site data.SiteInput) (res data.SiteResult, err error) {
+	defer func(){
+		if r := recover(); r != nil {
+			log.Printf("%s %s", r, debug.Stack())
+			res = data.SiteResult{GenericResult: data.GenericError()}
+		}
+	}()
+	res, err = data.UpsertSite(ctx, r.DB, site)
+	return res, err
 }
 
 type queryResolver struct{ *Resolver }
@@ -125,12 +176,6 @@ func (r *siteResolver) Groups(ctx context.Context, obj *data.Site) ([]data.Group
 }
 func (r *siteResolver) Items(ctx context.Context, obj *data.Site) ([]data.Item, error) {
 	return obj.Items(ctx, r.DB)
-}
-func (r *siteResolver) CreatedAt(ctx context.Context, obj *data.Site) (string, error) {
-	return obj.CreatedAt.Format(time.RFC3339), nil
-}
-func (r *siteResolver) LastUpdatedAt(ctx context.Context, obj *data.Site) (string, error) {
-	return obj.LastUpdatedAt.Format(time.RFC3339), nil
 }
 
 type userResolver struct{ *Resolver }

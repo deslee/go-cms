@@ -3,16 +3,12 @@ package data
 import (
 	"context"
 	"database/sql"
-	"time"
 )
 
 type Item struct {
 	ID            string
 	Data          JSONObject
-	CreatedAt     time.Time
-	CreatedBy     string
-	LastUpdatedAt time.Time
-	LastUpdatedBy string
+	AuditFields
 }
 
 type ItemInput struct {
@@ -23,9 +19,8 @@ type ItemInput struct {
 }
 
 type ItemResult struct {
+	GenericResult
 	Data         *Item   `json:"data"`
-	ErrorMessage *string `json:"errorMessage"`
-	Success      bool    `json:"success"`
 }
 
 func GetItems(ctx context.Context, db *sql.DB, s string) ([]Item, error) {

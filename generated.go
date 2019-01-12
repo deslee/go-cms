@@ -147,18 +147,12 @@ type ComplexityRoot struct {
 
 type AssetResolver interface {
 	Items(ctx context.Context, obj *data.Asset) ([]data.Item, error)
-	CreatedAt(ctx context.Context, obj *data.Asset) (string, error)
-
-	LastUpdatedAt(ctx context.Context, obj *data.Asset) (string, error)
 }
 type GroupResolver interface {
 	Items(ctx context.Context, obj *data.Group) ([]data.Item, error)
 }
 type ItemResolver interface {
 	Groups(ctx context.Context, obj *data.Item) ([]data.Group, error)
-	CreatedAt(ctx context.Context, obj *data.Item) (string, error)
-
-	LastUpdatedAt(ctx context.Context, obj *data.Item) (string, error)
 }
 type MutationResolver interface {
 	AddUserToSite(ctx context.Context, userId string, siteId string) (data.GenericResult, error)
@@ -183,9 +177,6 @@ type SiteResolver interface {
 	Assets(ctx context.Context, obj *data.Site) ([]data.Asset, error)
 	Groups(ctx context.Context, obj *data.Site) ([]data.Group, error)
 	Items(ctx context.Context, obj *data.Site) ([]data.Item, error)
-	CreatedAt(ctx context.Context, obj *data.Site) (string, error)
-
-	LastUpdatedAt(ctx context.Context, obj *data.Site) (string, error)
 }
 type UserResolver interface {
 	Sites(ctx context.Context, obj *data.User) ([]data.Site, error)
@@ -1064,28 +1055,20 @@ func (ec *executionContext) _Asset(ctx context.Context, sel ast.SelectionSet, ob
 				wg.Done()
 			}(i, field)
 		case "createdAt":
-			wg.Add(1)
-			go func(i int, field graphql.CollectedField) {
-				out.Values[i] = ec._Asset_createdAt(ctx, field, obj)
-				if out.Values[i] == graphql.Null {
-					invalid = true
-				}
-				wg.Done()
-			}(i, field)
+			out.Values[i] = ec._Asset_createdAt(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalid = true
+			}
 		case "createdBy":
 			out.Values[i] = ec._Asset_createdBy(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				invalid = true
 			}
 		case "lastUpdatedAt":
-			wg.Add(1)
-			go func(i int, field graphql.CollectedField) {
-				out.Values[i] = ec._Asset_lastUpdatedAt(ctx, field, obj)
-				if out.Values[i] == graphql.Null {
-					invalid = true
-				}
-				wg.Done()
-			}(i, field)
+			out.Values[i] = ec._Asset_lastUpdatedAt(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalid = true
+			}
 		case "lastUpdatedBy":
 			out.Values[i] = ec._Asset_lastUpdatedBy(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
@@ -1310,7 +1293,7 @@ func (ec *executionContext) _Asset_createdAt(ctx context.Context, field graphql.
 	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
 	resTmp := ec.FieldMiddleware(ctx, obj, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Asset().CreatedAt(rctx, obj)
+		return obj.CreatedAt, nil
 	})
 	if resTmp == nil {
 		if !ec.HasError(rctx) {
@@ -1364,7 +1347,7 @@ func (ec *executionContext) _Asset_lastUpdatedAt(ctx context.Context, field grap
 	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
 	resTmp := ec.FieldMiddleware(ctx, obj, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Asset().LastUpdatedAt(rctx, obj)
+		return obj.LastUpdatedAt, nil
 	})
 	if resTmp == nil {
 		if !ec.HasError(rctx) {
@@ -1654,28 +1637,20 @@ func (ec *executionContext) _Item(ctx context.Context, sel ast.SelectionSet, obj
 				wg.Done()
 			}(i, field)
 		case "createdAt":
-			wg.Add(1)
-			go func(i int, field graphql.CollectedField) {
-				out.Values[i] = ec._Item_createdAt(ctx, field, obj)
-				if out.Values[i] == graphql.Null {
-					invalid = true
-				}
-				wg.Done()
-			}(i, field)
+			out.Values[i] = ec._Item_createdAt(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalid = true
+			}
 		case "createdBy":
 			out.Values[i] = ec._Item_createdBy(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				invalid = true
 			}
 		case "lastUpdatedAt":
-			wg.Add(1)
-			go func(i int, field graphql.CollectedField) {
-				out.Values[i] = ec._Item_lastUpdatedAt(ctx, field, obj)
-				if out.Values[i] == graphql.Null {
-					invalid = true
-				}
-				wg.Done()
-			}(i, field)
+			out.Values[i] = ec._Item_lastUpdatedAt(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalid = true
+			}
 		case "lastUpdatedBy":
 			out.Values[i] = ec._Item_lastUpdatedBy(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
@@ -1819,7 +1794,7 @@ func (ec *executionContext) _Item_createdAt(ctx context.Context, field graphql.C
 	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
 	resTmp := ec.FieldMiddleware(ctx, obj, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Item().CreatedAt(rctx, obj)
+		return obj.CreatedAt, nil
 	})
 	if resTmp == nil {
 		if !ec.HasError(rctx) {
@@ -1873,7 +1848,7 @@ func (ec *executionContext) _Item_lastUpdatedAt(ctx context.Context, field graph
 	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
 	resTmp := ec.FieldMiddleware(ctx, obj, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Item().LastUpdatedAt(rctx, obj)
+		return obj.LastUpdatedAt, nil
 	})
 	if resTmp == nil {
 		if !ec.HasError(rctx) {
@@ -3018,28 +2993,20 @@ func (ec *executionContext) _Site(ctx context.Context, sel ast.SelectionSet, obj
 				wg.Done()
 			}(i, field)
 		case "createdAt":
-			wg.Add(1)
-			go func(i int, field graphql.CollectedField) {
-				out.Values[i] = ec._Site_createdAt(ctx, field, obj)
-				if out.Values[i] == graphql.Null {
-					invalid = true
-				}
-				wg.Done()
-			}(i, field)
+			out.Values[i] = ec._Site_createdAt(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalid = true
+			}
 		case "createdBy":
 			out.Values[i] = ec._Site_createdBy(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				invalid = true
 			}
 		case "lastUpdatedAt":
-			wg.Add(1)
-			go func(i int, field graphql.CollectedField) {
-				out.Values[i] = ec._Site_lastUpdatedAt(ctx, field, obj)
-				if out.Values[i] == graphql.Null {
-					invalid = true
-				}
-				wg.Done()
-			}(i, field)
+			out.Values[i] = ec._Site_lastUpdatedAt(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalid = true
+			}
 		case "lastUpdatedBy":
 			out.Values[i] = ec._Site_lastUpdatedBy(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
@@ -3330,7 +3297,7 @@ func (ec *executionContext) _Site_createdAt(ctx context.Context, field graphql.C
 	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
 	resTmp := ec.FieldMiddleware(ctx, obj, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Site().CreatedAt(rctx, obj)
+		return obj.CreatedAt, nil
 	})
 	if resTmp == nil {
 		if !ec.HasError(rctx) {
@@ -3384,7 +3351,7 @@ func (ec *executionContext) _Site_lastUpdatedAt(ctx context.Context, field graph
 	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
 	resTmp := ec.FieldMiddleware(ctx, obj, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Site().LastUpdatedAt(rctx, obj)
+		return obj.LastUpdatedAt, nil
 	})
 	if resTmp == nil {
 		if !ec.HasError(rctx) {

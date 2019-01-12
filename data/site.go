@@ -3,17 +3,13 @@ package data
 import (
 	"context"
 	"database/sql"
-	"time"
 )
 
 type Site struct {
 	ID            string
 	Name          string
 	Data          JSONObject
-	CreatedAt     time.Time
-	CreatedBy     string
-	LastUpdatedAt time.Time
-	LastUpdatedBy string
+	AuditFields
 }
 
 type SiteInput struct {
@@ -23,9 +19,8 @@ type SiteInput struct {
 }
 
 type SiteResult struct {
+	GenericResult
 	Data         *Site   `json:"data"`
-	ErrorMessage *string `json:"errorMessage"`
-	Success      bool    `json:"success"`
 }
 
 func (site Site) Items(ctx context.Context, db *sql.DB) ([]Item, error) {
@@ -48,10 +43,11 @@ func GetSite(ctx context.Context, db *sql.DB, siteId string) (*Site, error) {
 	panic("not implemented")
 }
 
-func UpsertSite(ctx context.Context, db *sql.DB, site SiteInput) (SiteResult, error) {
+func DeleteSite(ctx context.Context, db *sql.DB, siteId string) (GenericResult, error) {
 	panic("not implemented")
 }
 
-func DeleteSite(ctx context.Context, db *sql.DB, siteId string) (GenericResult, error) {
+
+func UpsertSite(ctx context.Context, db *sql.DB, site SiteInput) (SiteResult, error) {
 	panic("not implemented")
 }

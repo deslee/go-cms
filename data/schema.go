@@ -134,10 +134,13 @@ func CreateTablesAndIndicesIfNotExist(db *sql.DB) {
 
 	executeSql(tx, `CREATE INDEX IF NOT EXISTS "IX_Assets_SiteId" ON "Assets" ("SiteId")`)
 	executeSql(tx, `CREATE INDEX IF NOT EXISTS "IX_Groups_SiteId" ON "Groups" ("SiteId")`)
-	executeSql(tx, `CREATE INDEX IF NOT EXISTS "IX_ItemAssets_AssetId" ON "ItemAssets" ("AssetId")`)
-	executeSql(tx, `CREATE INDEX IF NOT EXISTS "IX_ItemGroups_GroupId" ON "ItemGroups" ("GroupId")`)
 	executeSql(tx, `CREATE INDEX IF NOT EXISTS "IX_Items_SiteId" ON "Items" ("SiteId")`)
+	executeSql(tx, `CREATE INDEX IF NOT EXISTS "IX_ItemAssets_AssetId" ON "ItemAssets" ("AssetId")`)
+	executeSql(tx, `CREATE INDEX IF NOT EXISTS "IX_ItemAssets_ItemId" ON "ItemAssets" ("ItemId")`)
+	executeSql(tx, `CREATE INDEX IF NOT EXISTS "IX_ItemGroups_GroupId" ON "ItemGroups" ("GroupId")`)
+	executeSql(tx, `CREATE INDEX IF NOT EXISTS "IX_ItemGroups_ItemId" ON "ItemGroups" ("ItemId")`)
 	executeSql(tx, `CREATE INDEX IF NOT EXISTS "IX_SiteUsers_SiteId" ON "SiteUsers" ("SiteId")`)
+	executeSql(tx, `CREATE INDEX IF NOT EXISTS "IX_SiteUsers_UserId" ON "SiteUsers" ("UserId")`)
 	executeSql(tx, `CREATE UNIQUE INDEX IF NOT EXISTS "IX_Users_Email" ON "Users" ("Email")`)
 
 	// commit the transaction
@@ -147,7 +150,7 @@ func CreateTablesAndIndicesIfNotExist(db *sql.DB) {
 	}
 }
 
-func executeSql(tx *sql.Tx, sql string) {
+func executeSql(tx *sql.Tx, sql string, args ...interface{}) {
 	// prepare a statement
 	stmt, err := tx.Prepare(sql)
 	if err != nil {
@@ -156,7 +159,7 @@ func executeSql(tx *sql.Tx, sql string) {
 	defer stmt.Close()
 
 	// execute statement
-	_, err = stmt.Exec()
+	_, err = stmt.Exec(args...)
 	if err != nil {
 		panic(err)
 	}
