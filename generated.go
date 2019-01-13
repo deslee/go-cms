@@ -1098,7 +1098,7 @@ func (ec *executionContext) _Asset_id(ctx context.Context, field graphql.Collect
 	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
 	resTmp := ec.FieldMiddleware(ctx, obj, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.ID, nil
+		return obj.Id, nil
 	})
 	if resTmp == nil {
 		if !ec.HasError(rctx) {
@@ -1680,7 +1680,7 @@ func (ec *executionContext) _Item_id(ctx context.Context, field graphql.Collecte
 	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
 	resTmp := ec.FieldMiddleware(ctx, obj, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.ID, nil
+		return obj.Id, nil
 	})
 	if resTmp == nil {
 		if !ec.HasError(rctx) {
@@ -3036,7 +3036,7 @@ func (ec *executionContext) _Site_id(ctx context.Context, field graphql.Collecte
 	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
 	resTmp := ec.FieldMiddleware(ctx, obj, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.ID, nil
+		return obj.Id, nil
 	})
 	if resTmp == nil {
 		if !ec.HasError(rctx) {
@@ -3573,7 +3573,7 @@ func (ec *executionContext) _User_id(ctx context.Context, field graphql.Collecte
 	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
 	resTmp := ec.FieldMiddleware(ctx, obj, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.ID, nil
+		return obj.Id, nil
 	})
 	if resTmp == nil {
 		if !ec.HasError(rctx) {
@@ -5275,7 +5275,7 @@ func UnmarshalItemInput(v interface{}) (data.ItemInput, error) {
 			var ptr1 string
 			if v != nil {
 				ptr1, err = graphql.UnmarshalString(v)
-				it.ID = &ptr1
+				it.Id = &ptr1
 			}
 
 			if err != nil {

@@ -2,16 +2,20 @@ package data
 
 import (
 	"context"
-	"github.com/jinzhu/gorm"
+	"github.com/jmoiron/sqlx"
 )
 
 type Group struct {
-	ID          string     `gorm:"type:text;primary_key;column:Id"`
-	Name        string     `gorm:"type:text;column:Name"`
-	Data        JSONObject `gorm:"type:text;column:Data"`
-	AuditFields `gorm:"type:text"`
+	Id   string     `db:"Id"`
+	Name string     `db:"Name"`
+	Data JSONObject `db:"Data"`
+	AuditFields
 }
 
-func (group Group) Items(ctx context.Context, db *gorm.DB) ([]Item, error) {
+func (Group) TableName() string {
+	return "Groups"
+}
+
+func (group Group) Items(ctx context.Context, db *sqlx.DB) ([]Item, error) {
 	panic("not implemented")
 }

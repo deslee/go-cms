@@ -1,9 +1,9 @@
 package data
 
 type ItemGroup struct {
-	ItemID  string `gorm:"type:text;primary_key;column:ItemId"`
-	GroupID string `gorm:"type:text;primary_key;column:GroupId"`
-	Order   int    `gorm:"type:integer;column:Order"`
+	ItemId  string `db:"ItemId"`
+	GroupId string `db:"GroupId"`
+	Order   int    `db:"Order"`
 	AuditFields
 }
 

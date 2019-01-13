@@ -6,10 +6,10 @@ import (
 )
 
 type AuditFields struct {
-	CreatedAt     string `gorm:"type:text;column:CreatedAt"`
-	CreatedBy     string `gorm:"type:text;column:CreatedBy"`
-	LastUpdatedAt string `gorm:"type:text;column:LastUpdatedAt"`
-	LastUpdatedBy string `gorm:"type:text;column:LastUpdatedBy"`
+	CreatedAt     string `db:"CreatedAt"`
+	CreatedBy     string `db:"CreatedBy"`
+	LastUpdatedAt string `db:"LastUpdatedAt"`
+	LastUpdatedBy string `db:"LastUpdatedBy"`
 }
 
 func CreateAuditFields(ctx context.Context, previous *AuditFields) AuditFields {
@@ -23,10 +23,10 @@ func CreateAuditFields(ctx context.Context, previous *AuditFields) AuditFields {
 	)
 
 	userId := UserIdFromContext(ctx)
-	if userId == nil {
+	if len(userId) == 0 {
 		modifier = "Unknown"
 	} else {
-		modifier = *userId
+		modifier = userId
 	}
 
 	if previous != nil {

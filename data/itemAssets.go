@@ -1,9 +1,9 @@
 package data
 
 type ItemAsset struct {
-	ItemID string `gorm:"type:text;primary_key;column:ItemId"`
-	SiteID string `gorm:"type:text;primary_key;column:SiteId"`
-	Order  int    `gorm:"type:integer;column:Order"`
+	ItemId string `db:"ItemId"`
+	SiteId string `db:"SiteId"`
+	Order  int    `fb:"Order"`
 	AuditFields
 }
 

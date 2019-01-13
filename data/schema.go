@@ -3,10 +3,10 @@ package data
 import (
 	"context"
 	"database/sql"
-	_ "github.com/jinzhu/gorm/dialects/sqlite"
+	"github.com/jmoiron/sqlx"
 )
 
-func CreateTablesAndIndicesIfNotExist(db *sql.DB) {
+func CreateTablesAndIndicesIfNotExist(db *sqlx.DB) {
 	var (
 		err error
 		ctx = context.Background()

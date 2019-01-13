@@ -3,13 +3,13 @@ package cms
 import (
 	"context"
 	"github.com/deslee/cms/data"
-	"github.com/jinzhu/gorm"
+	"github.com/jmoiron/sqlx"
 	"log"
 	"runtime/debug"
 )
 
 type Resolver struct {
-	*gorm.DB
+	*sqlx.DB
 }
 
 func (r *Resolver) Asset() AssetResolver {

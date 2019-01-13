@@ -1,5 +1,7 @@
 package data
 
+import "fmt"
+
 type GenericResult struct {
 	ErrorMessage *string `json:"errorMessage"`
 	Success      bool    `json:"success"`
@@ -20,4 +22,8 @@ func GenericErrorMessage(errorMessage string) GenericResult {
 		ErrorMessage: &errorMessage,
 		Success:      false,
 	}
+}
+
+func GenericUnexpectedError(err error) GenericResult {
+	return GenericErrorMessage(fmt.Sprintf("Unexpected error %s", err))
 }

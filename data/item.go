@@ -2,17 +2,21 @@ package data
 
 import (
 	"context"
-	"github.com/jinzhu/gorm"
+	"github.com/jmoiron/sqlx"
 )
 
 type Item struct {
-	ID   string     `gorm:"type:text;primary_key;column:Id"`
-	Data JSONObject `gorm:"type:text;column:Data"`
+	Id   string     `db:"Id"`
+	Data JSONObject `db:"Data"`
 	AuditFields
 }
 
+func (Item) TableName() string {
+	return "Items"
+}
+
 type ItemInput struct {
-	ID     *string  `json:"id"`
+	Id     *string  `json:"id"`
 	Type   string   `json:"type"`
 	Data   string   `json:"data"`
 	Groups []string `json:"groups"`
@@ -23,22 +27,22 @@ type ItemResult struct {
 	Data *Item `json:"data"`
 }
 
-func GetItems(ctx context.Context, db *gorm.DB, s string) ([]Item, error) {
+func GetItems(ctx context.Context, db *sqlx.DB, s string) ([]Item, error) {
 	panic("not implemented")
 }
 
-func GetItem(ctx context.Context, db *gorm.DB, s string) (*Item, error) {
+func GetItem(ctx context.Context, db *sqlx.DB, s string) (*Item, error) {
 	panic("not implemented")
 }
 
-func (item Item) Groups(ctx context.Context, db *gorm.DB) ([]Group, error) {
+func (item Item) Groups(ctx context.Context, db *sqlx.DB) ([]Group, error) {
 	panic("not implemented")
 }
 
-func UpsertItem(ctx context.Context, db *gorm.DB, item ItemInput, siteId string) (ItemResult, error) {
+func UpsertItem(ctx context.Context, db *sqlx.DB, item ItemInput, siteId string) (ItemResult, error) {
 	panic("not implemented")
 }
 
-func DeleteItem(ctx context.Context, db *gorm.DB, itemId string) (GenericResult, error) {
+func DeleteItem(ctx context.Context, db *sqlx.DB, itemId string) (GenericResult, error) {
 	panic("not implemented")
 }

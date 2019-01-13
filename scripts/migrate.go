@@ -2,6 +2,7 @@ package main
 
 import (
 	"database/sql"
+	"github.com/jmoiron/sqlx"
 	"github.com/deslee/cms/data"
 )
 

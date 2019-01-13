@@ -4,7 +4,7 @@ import (
 	"github.com/99designs/gqlgen/handler"
 	"github.com/deslee/cms"
 	"github.com/deslee/cms/data"
-	"github.com/jinzhu/gorm"
+	"github.com/jmoiron/sqlx"
 	_ "github.com/mattn/go-sqlite3"
 	"log"
 	"net/http"
@@ -20,14 +20,20 @@ func main() {
 		port = defaultPort
 	}
 
-	db, err := gorm.Open("sqlite3", "database.sqlite")
+	db, err := sqlx.Open("sqlite3", "database.sqlite?_loc=auto")
 	if err != nil {
 		panic(err)
 	}
 
+	data.CreateTablesAndIndicesIfNotExist(db)
+
 	http.Handle("/", handler.Playground("GraphQL playground", "/query"))
 	http.Handle(
 		"/query",
+		withAuth(handler.GraphQL(cms.NewExecutableSchema(cms.Config{Resolvers: &cms.Resolver{DB: db}}))),
+	)
+	http.Handle(
+		"/graphql",
 		withAuth(handler.GraphQL(cms.NewExecutableSchema(cms.Config{Resolvers: &cms.Resolver{DB: db}}))),
 	)
 
@@ -41,7 +47,7 @@ func withAuth(next http.Handler) http.Handler {
 		if len(auth) == 2 {
 			if auth[0] == "Bearer" {
 				token := auth[1]
-				ctx, err := data.ParseTokenToContext(token, r.Context())
+				ctx, err := data.ParseTokenToContext(r.Context(), token)
 				if err != nil {
 					http.Error(w, "authorization failed", http.StatusUnauthorized)
 					return

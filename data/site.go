@@ -2,15 +2,21 @@ package data
 
 import (
 	"context"
+	"database/sql"
 	"fmt"
-	"github.com/jinzhu/gorm"
+	"github.com/jmoiron/sqlx"
+	"log"
 )
 
 type Site struct {
-	ID   string     `gorm:"type:text;primary_key;column:Id"`
-	Name string     `gorm:"type:text;column:Name"`
-	Data JSONObject `gorm:"type:text;column:Data"`
+	Id   string     `db:"Id"`
+	Name string     `db:"Name"`
+	Data JSONObject `db:"Data"`
 	AuditFields
+}
+
+func (Site) TableName() string {
+	return "Sites"
 }
 
 type SiteInput struct {
@@ -24,92 +30,102 @@ type SiteResult struct {
 	Data *Site `json:"data"`
 }
 
-func (site Site) Items(ctx context.Context, db *gorm.DB) ([]Item, error) {
+func UnexpectedErrorSiteResult(err error) SiteResult {
+	return SiteResult{GenericResult:GenericErrorMessage(fmt.Sprintf("Unexpected error %s", err))}
+}
+
+func (site Site) Items(ctx context.Context, db *sqlx.DB) ([]Item, error) {
 	panic("not implemented")
 }
 
-func (site Site) Groups(ctx context.Context, db *gorm.DB) ([]Group, error) {
+func (site Site) Groups(ctx context.Context, db *sqlx.DB) ([]Group, error) {
 	panic("not implemented")
 }
 
-func (site Site) Assets(ctx context.Context, db *gorm.DB) ([]Asset, error) {
+func (site Site) Assets(ctx context.Context, db *sqlx.DB) ([]Asset, error) {
 	panic("not implemented")
 }
 
-func GetSites(ctx context.Context, db *gorm.DB) ([]Site, error) {
+func GetSites(ctx context.Context, db *sqlx.DB) ([]Site, error) {
 	return getAllSitesForUserInContext(ctx, db)
 }
 
-func GetSite(ctx context.Context, db *gorm.DB, siteId string) (*Site, error) {
-	if assertUserHasAccessToSite(ctx, db, siteId) == false {
-		panic("Not authenticated")
+func GetSite(ctx context.Context, db *sqlx.DB, siteId string) (*Site, error) {
+	if validated, err := assertUserHasAccessToSite(ctx, db, siteId); validated == false || err != nil {
+		if err != nil {
+			log.Printf("%s", err)
+		}
+		return nil, nil
 	}
 	return getSiteById(ctx, db, siteId)
 }
 
-func DeleteSite(ctx context.Context, db *gorm.DB, siteId string) (GenericResult, error) {
-	if assertUserHasAccessToSite(ctx, db, siteId) == false {
+func DeleteSite(ctx context.Context, db *sqlx.DB, siteId string) (GenericResult, error) {
+	if validated, err := assertUserHasAccessToSite(ctx, db, siteId); validated == false || err != nil {
+		if err != nil {
+			log.Printf("%s", err)
+		}
 		return GenericErrorMessage(UnauthenticatedMsg), nil
 	}
 
-	err := db.Delete(Site{}, "SiteId=?", siteId).Error
+
+	_, err := db.Exec("DELETE FROM Sites WHERE Id=?", siteId)
 	if err != nil {
 		return GenericErrorMessage(fmt.Sprintf("Error: %s", err)), nil
 	}
 	return GenericSuccess(), nil
 }
 
-func UpsertSite(ctx context.Context, db *gorm.DB, input SiteInput) (SiteResult, error) {
+func UpsertSite(ctx context.Context, db *sqlx.DB, input SiteInput) (SiteResult, error) {
 	var (
 		site Site
 	)
 	user, err := UserFromContext(ctx, db)
-	die(err)
+	if err != nil {
+		return UnexpectedErrorSiteResult(err), nil
+	}
 	if user == nil {
 		return SiteResult{GenericResult: GenericErrorMessage(UnauthenticatedMsg)}, nil
 	}
 	if input.ID == nil {
 		site = Site{
-			ID:          generateId(),
+			Id:          generateId(),
 			Name:        input.Name,
 			Data:        input.Data,
 			AuditFields: CreateAuditFields(ctx, nil),
 		}
-		err = db.Create(site).Error
-		if err != nil {
-			return SiteResult{GenericResult: GenericErrorMessage(fmt.Sprintf("Error: %s", err))}, nil
-		}
 	} else {
 		existingSite, err := getSiteById(ctx, db, *input.ID)
-		die(err)
+		if err != nil {
+			return UnexpectedErrorSiteResult(err), nil
+		}
 		if existingSite == nil {
 			return SiteResult{GenericResult: GenericErrorMessage(fmt.Sprintf("Site %s does not exist", *input.ID))}, nil
 		}
+		if validated, err := assertUserHasAccessToSite(ctx, db, existingSite.Id); validated == false || err != nil {
+			if err != nil {
+				log.Printf("%s", err)
+			}
+			return SiteResult{GenericResult: GenericErrorMessage(UnauthenticatedMsg)}, nil
+		}
 		site = Site{
-			ID:          *input.ID,
+			Id:          *input.ID,
 			Name:        input.Name,
 			Data:        input.Data,
 			AuditFields: CreateAuditFields(ctx, &existingSite.AuditFields),
 		}
-		err = db.Update(site).Error
-		if err != nil {
-			return SiteResult{GenericResult: GenericErrorMessage(fmt.Sprintf("Error: %s", err))}, nil
-		}
+	}
+	err = upsertSite(ctx, db, site)
+	if err != nil {
+		return UnexpectedErrorSiteResult(err), nil
 	}
 
-	siteUser := SiteUser{
-		UserID:      user.ID,
-		SiteID:      site.ID,
-		Order:       0,
-		AuditFields: CreateAuditFields(ctx, nil),
-	}
-	if err := db.Create(siteUser).Error; err != nil {
-		if err != nil {
-			return SiteResult{GenericResult: GenericErrorMessage(fmt.Sprintf("Error: %s", err))}, nil
-		}
+	_, err = AddUserToSite(ctx, db, user.Id, site.Id)
+	if err != nil {
+		return UnexpectedErrorSiteResult(err), nil
 	}
 
-	existingSite, err := getSiteById(ctx, db, site.ID)
+	existingSite, err := getSiteById(ctx, db, site.Id)
 	if err != nil {
 		return SiteResult{GenericResult: GenericErrorMessage(fmt.Sprintf("Error: %s", err))}, nil
 	}
@@ -120,37 +136,41 @@ func UpsertSite(ctx context.Context, db *gorm.DB, input SiteInput) (SiteResult, 
 	}, nil
 }
 
-func getAllSitesForUserInContext(ctx context.Context, db *gorm.DB) ([]Site, error) {
+func getAllSitesForUserInContext(ctx context.Context, db *sqlx.DB) ([]Site, error) {
 	var (
 		sites []Site
 	)
 
 	user, err := UserFromContext(ctx, db)
-	die(err)
 	if user == nil {
-		panic("Not authenticated")
+		return sites, nil
 	}
 
-	rows, err := db.Raw(`select S.* from SiteUsers SU 
-		INNER JOIN Sites S
-		WHERE SU.UserId=?`, user.ID).Rows()
-	die(err)
+	rows, err := db.Queryx(`SELECT S.* FROM SiteUsers SU INNER JOIN Sites S WHERE SU.UserId=?`, user.Id)
+	if err != nil {
+		fmt.Printf("Failed to query SiteUsers: %s", err)
+		return nil, err
+	}
 	defer rows.Close()
 	for rows.Next() {
 		var site Site
-		err = db.ScanRows(rows, &site)
-		die(err)
+		err = rows.StructScan(&site)
+		if err != nil {
+			return nil, err
+		}
 		sites = append(sites, site)
 	}
 
 	return sites, nil
 }
 
-func getSiteById(ctx context.Context, db *gorm.DB, id string) (*Site, error) {
+func getSiteById(ctx context.Context, db *sqlx.DB, id string) (*Site, error) {
 	site := Site{}
 
-	if err := db.Where("Id = ?", id).First(&site).Error; err != nil {
-		if gorm.IsRecordNotFoundError(err) {
+	row := db.QueryRowx("SELECT  * FROM Sites WHERE Id=?", id)
+	err := row.StructScan(&site)
+	if err != nil {
+		if err == sql.ErrNoRows {
 			return nil, nil
 		}
 		return nil, err
