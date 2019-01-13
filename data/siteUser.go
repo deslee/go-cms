@@ -24,7 +24,7 @@ func AddUserToSite(ctx context.Context, db *sqlx.DB, userId string, siteId strin
 		AuditFields: CreateAuditFields(ctx, nil),
 	}
 
-	err := upsertSiteUsers(ctx, db, siteUser)
+	err := RepoUpsertSiteUser(ctx, db, siteUser)
 	if err != nil {
 		return GenericUnexpectedError(err), nil
 	}

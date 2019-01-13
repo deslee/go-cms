@@ -2,11 +2,11 @@ package data
 
 type ItemAsset struct {
 	ItemId string `db:"ItemId"`
-	SiteId string `db:"SiteId"`
-	Order  int    `fb:"Order"`
+	AssetId string `db:"AssetId"`
+	Order  int    `db:"Order"`
 	AuditFields
 }
 
 func (ItemAsset) TableName() string {
-	return "ItemAsset"
+	return "ItemAssets"
 }

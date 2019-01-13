@@ -4,6 +4,7 @@ import (
 	"fmt"
 	. "github.com/dave/jennifer/jen"
 	"github.com/deslee/cms/data"
+	"os"
 	"reflect"
 )
 
@@ -15,12 +16,12 @@ func main() {
 	generate(
 		&data.User{},
 		&data.Site{},
-		&data.SiteUser{},
-		&data.ItemGroup{},
-		&data.ItemAsset{},
 		&data.Item{},
 		&data.Group{},
 		&data.Asset{},
+		&data.SiteUser{},
+		&data.ItemGroup{},
+		&data.ItemAsset{},
 	)
 }
 
@@ -31,24 +32,38 @@ func generate(modelTypes ... interface{}) {
 		generateRepositoryMethods(model, f)
 	}
 
-	fmt.Printf("%#v", f)
+	repoFile, err := os.Create("./data/repository.go")
+	if err != nil {
+		panic(err)
+	}
+	defer repoFile.Close()
 
+	err = f.Render(repoFile)
+	if err != nil {
+		panic(err)
+	}
 }
 
 func generateRepositoryMethods(model Model, f *File) {
 	// generate upsert
 	upsertSql := `INSERT INTO ` + model.TableName + ` VALUES (`
-	for _, field := range model.Fields {
-		upsertSql += fmt.Sprintf(":%s,", field.ColumnName)
+	for idx, field := range model.Fields {
+		upsertSql += fmt.Sprintf(":%s", field.ColumnName)
+		if idx < (len(model.Fields) - 1) {
+			upsertSql += ","
+		}
 	}
 	upsertSql += `) ON CONFLICT(Id) DO UPDATE SET `
 
-	for _, field := range model.Fields {
-		upsertSql += fmt.Sprintf("%s=excluded.%s,", field.ColumnName, field.ColumnName)
+	for idx, field := range model.Fields {
+		upsertSql += fmt.Sprintf("`%s`=excluded.`%s`", field.ColumnName, field.ColumnName)
+		if idx < (len(model.Fields) - 1) {
+			upsertSql += ","
+		}
 	}
 
-	f.Func().Id(fmt.Sprintf("Upsert%s", model.StructName)).Params(
-		Id("ctx").Qual("context", "Context"), Id("db").Add(Op("*")).Qual("sqlx","DB"), Id("obj").Id(model.StructName),
+	f.Func().Id(fmt.Sprintf("RepoUpsert%s", model.StructName)).Params(
+		Id("ctx").Qual("context", "Context"), Id("db").Add(Op("*")).Qual("github.com/jmoiron/sqlx","DB"), Id("obj").Id(model.StructName),
 	).Error().Block(
 		List(Id("stmt"), Id("err")).Op(":=").Id("db.PrepareNamedContext").Call(Id("ctx"), Lit(upsertSql)),
 		If(Id("err").Op("!=").Id("nil")).Block(
@@ -63,6 +78,26 @@ func generateRepositoryMethods(model Model, f *File) {
 		Line(),
 		Return(Id("err")),
 	)
+	f.Line()
+	f.Func().Id(fmt.Sprintf("RepoFind%sById", model.StructName)).Params(
+		Id("ctx").Qual("context", "Context"), Id("db").Add(Op("*")).Qual("github.com/jmoiron/sqlx","DB"), Id("id").Id("string"),
+	).Params(Op("*").Id(model.StructName), Error()).Block(
+		Id("obj").Op(":=").Id(model.StructName).Values(),
+		Line(),
+		Id("err").Op(":=").Id("db.QueryRowx").Call(
+			Lit(fmt.Sprintf("SELECT * FROM %s WHERE Id=?", model.TableName)), Id("id"),
+		).Add(Op(".")).Add(Id("StructScan")).Call(Op("&").Id("obj")),
+		Line(),
+		If(Id("err").Op("!=").Id("nil")).Block(
+			If(Id("err")).Op("==").Qual("database/sql", "ErrNoRows").Block(
+				Return(List(Id("nil"), Id("nil"))),
+			),
+			Return(List(Id("nil"), Id("err"))),
+		),
+		Line(),
+		Return(List(Op("&").Id("obj"), Id("nil"))),
+	)
+	f.Line()
 }
 
 type Model struct {

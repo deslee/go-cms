@@ -115,7 +115,7 @@ func UpsertSite(ctx context.Context, db *sqlx.DB, input SiteInput) (SiteResult, 
 			AuditFields: CreateAuditFields(ctx, &existingSite.AuditFields),
 		}
 	}
-	err = upsertSite(ctx, db, site)
+	err = RepoUpsertSite(ctx, db, site)
 	if err != nil {
 		return UnexpectedErrorSiteResult(err), nil
 	}

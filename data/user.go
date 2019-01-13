@@ -84,7 +84,7 @@ func UserFromContext(ctx context.Context, db *sqlx.DB) (*User, error) {
 	}
 
 	// delegate to getUserById
-	return getUserById(ctx, db, userId)
+	return RepoFindUserById(ctx, db, userId)
 }
 
 func (user User) Sites(ctx context.Context, db *sqlx.DB) ([]Site, error) {
@@ -153,7 +153,7 @@ func Register(ctx context.Context, db *sqlx.DB, registration RegisterInput) (Use
 	}
 
 	// grab the user back out
-	createdUser, err := getUserById(ctx, db, id)
+	createdUser, err := RepoFindUserById(ctx, db, id)
 	if err != nil {
 		return UnexpectedErrorUserResult(err), nil
 	}

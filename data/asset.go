@@ -6,7 +6,7 @@ import (
 )
 
 type Asset struct {
-	Id    string `db:"Id"`
+	Id    string `db:"columnId"`
 	State string `db:"State"`
 	Type  string `db:"Type"`
 	Data  string `db:"Data"`
