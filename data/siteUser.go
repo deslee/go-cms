@@ -2,7 +2,7 @@ package data
 
 import (
 	"context"
-	. "github.com/deslee/cms/models"
+	. "github.com/deslee/cms/model"
 	"github.com/deslee/cms/repository"
 	"github.com/jmoiron/sqlx"
 )

@@ -3,7 +3,7 @@ package data
 import (
 	"context"
 	"fmt"
-	. "github.com/deslee/cms/models"
+	. "github.com/deslee/cms/model"
 	"github.com/deslee/cms/repository"
 	"github.com/dgrijalva/jwt-go"
 	"github.com/jmoiron/sqlx"

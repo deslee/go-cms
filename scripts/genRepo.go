@@ -3,7 +3,7 @@ package main
 import (
 	"fmt"
 	. "github.com/dave/jennifer/jen"
-	"github.com/deslee/cms/models"
+	"github.com/deslee/cms/model"
 	"os"
 	"reflect"
 	"strings"
@@ -15,14 +15,14 @@ type tabler interface {
 
 func main() {
 	generate(
-		&models.User{},
-		&models.Site{},
-		&models.Item{},
-		&models.Group{},
-		&models.Asset{},
-		&models.SiteUser{},
-		&models.ItemGroup{},
-		&models.ItemAsset{},
+		&model.User{},
+		&model.Site{},
+		&model.Item{},
+		&model.Group{},
+		&model.Asset{},
+		&model.SiteUser{},
+		&model.ItemGroup{},
+		&model.ItemAsset{},
 	)
 }
 
@@ -106,8 +106,8 @@ func writeQueryMethodsForModel(model Model, fieldsToQueryOn []Field, f *File) {
 
 	f.Func().Id(fmt.Sprintf("Find%sBy%s", model.StructName, methodNameEnding)).Params(
 		params...,
-	).Params(Op("*").Qual("github.com/deslee/cms/models", model.StructName), Error()).Block(
-		Id("obj").Op(":=").Qual("github.com/deslee/cms/models", model.StructName).Values(),
+	).Params(Op("*").Qual("github.com/deslee/cms/model", model.StructName), Error()).Block(
+		Id("obj").Op(":=").Qual("github.com/deslee/cms/model", model.StructName).Values(),
 		Line(),
 		Id("err").Op(":=").Id("db.QueryRowx").Call(
 			queryRowArguments...,
@@ -168,7 +168,7 @@ func writeUpsertMethodForModelForType(model Model, f *File, ctxCreator string) {
 	}
 
 	f.Func().Id(functionName).Params(
-		Id("ctx").Qual("context", "Context"), Id(strings.ToLower(ctxCreator)).Add(Op("*")).Qual("github.com/jmoiron/sqlx", ctxCreator), Id("obj").Qual("github.com/deslee/cms/models", model.StructName),
+		Id("ctx").Qual("context", "Context"), Id(strings.ToLower(ctxCreator)).Add(Op("*")).Qual("github.com/jmoiron/sqlx", ctxCreator), Id("obj").Qual("github.com/deslee/cms/model", model.StructName),
 	).Error().Block(
 		List(Id("stmt"), Id("err")).Op(":=").Id(fmt.Sprintf("%s.PrepareNamedContext", strings.ToLower(ctxCreator))).Call(Id("ctx"), Lit(upsertSql)),
 		If(Id("err").Op("!=").Id("nil")).Block(

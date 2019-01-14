@@ -4,7 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
-	. "github.com/deslee/cms/models"
+	. "github.com/deslee/cms/model"
 	"github.com/deslee/cms/repository"
 	"github.com/jmoiron/sqlx"
 	"log"

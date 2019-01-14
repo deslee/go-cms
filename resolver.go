@@ -3,7 +3,7 @@ package cms
 import (
 	"context"
 	. "github.com/deslee/cms/data"
-	. "github.com/deslee/cms/models"
+	. "github.com/deslee/cms/model"
 	"github.com/jmoiron/sqlx"
 	"log"
 	"runtime/debug"

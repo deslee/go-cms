@@ -5,11 +5,11 @@ package repository
 import (
 	"context"
 	"database/sql"
-	models "github.com/deslee/cms/models"
+	model "github.com/deslee/cms/model"
 	sqlx "github.com/jmoiron/sqlx"
 )
 
-func UpsertUser(ctx context.Context, db *sqlx.DB, obj models.User) error {
+func UpsertUser(ctx context.Context, db *sqlx.DB, obj model.User) error {
 	stmt, err := db.PrepareNamedContext(ctx, "INSERT INTO Users VALUES (:Id,:Email,:Password,:Salt,:Data,:CreatedAt,:CreatedBy,:LastUpdatedAt,:LastUpdatedBy) ON CONFLICT(Id) DO UPDATE SET `Id`=excluded.`Id`,`Email`=excluded.`Email`,`Password`=excluded.`Password`,`Salt`=excluded.`Salt`,`Data`=excluded.`Data`,`CreatedAt`=excluded.`CreatedAt`,`CreatedBy`=excluded.`CreatedBy`,`LastUpdatedAt`=excluded.`LastUpdatedAt`,`LastUpdatedBy`=excluded.`LastUpdatedBy`")
 	if err != nil {
 		return err
@@ -23,7 +23,7 @@ func UpsertUser(ctx context.Context, db *sqlx.DB, obj models.User) error {
 	return err
 }
 
-func UpsertUserTx(ctx context.Context, tx *sqlx.Tx, obj models.User) error {
+func UpsertUserTx(ctx context.Context, tx *sqlx.Tx, obj model.User) error {
 	stmt, err := tx.PrepareNamedContext(ctx, "INSERT INTO Users VALUES (:Id,:Email,:Password,:Salt,:Data,:CreatedAt,:CreatedBy,:LastUpdatedAt,:LastUpdatedBy) ON CONFLICT(Id) DO UPDATE SET `Id`=excluded.`Id`,`Email`=excluded.`Email`,`Password`=excluded.`Password`,`Salt`=excluded.`Salt`,`Data`=excluded.`Data`,`CreatedAt`=excluded.`CreatedAt`,`CreatedBy`=excluded.`CreatedBy`,`LastUpdatedAt`=excluded.`LastUpdatedAt`,`LastUpdatedBy`=excluded.`LastUpdatedBy`")
 	if err != nil {
 		return err
@@ -37,8 +37,8 @@ func UpsertUserTx(ctx context.Context, tx *sqlx.Tx, obj models.User) error {
 	return err
 }
 
-func FindUserById(ctx context.Context, db *sqlx.DB, keyId string) (*models.User, error) {
-	obj := models.User{}
+func FindUserById(ctx context.Context, db *sqlx.DB, keyId string) (*model.User, error) {
+	obj := model.User{}
 
 	err := db.QueryRowx("SELECT * FROM Users WHERE Id=?", keyId).StructScan(&obj)
 
@@ -52,8 +52,8 @@ func FindUserById(ctx context.Context, db *sqlx.DB, keyId string) (*models.User,
 	return &obj, nil
 }
 
-func FindUserByEmail(ctx context.Context, db *sqlx.DB, keyEmail string) (*models.User, error) {
-	obj := models.User{}
+func FindUserByEmail(ctx context.Context, db *sqlx.DB, keyEmail string) (*model.User, error) {
+	obj := model.User{}
 
 	err := db.QueryRowx("SELECT * FROM Users WHERE Email=?", keyEmail).StructScan(&obj)
 
@@ -67,7 +67,7 @@ func FindUserByEmail(ctx context.Context, db *sqlx.DB, keyEmail string) (*models
 	return &obj, nil
 }
 
-func UpsertSite(ctx context.Context, db *sqlx.DB, obj models.Site) error {
+func UpsertSite(ctx context.Context, db *sqlx.DB, obj model.Site) error {
 	stmt, err := db.PrepareNamedContext(ctx, "INSERT INTO Sites VALUES (:Id,:Name,:Data,:CreatedAt,:CreatedBy,:LastUpdatedAt,:LastUpdatedBy) ON CONFLICT(Id) DO UPDATE SET `Id`=excluded.`Id`,`Name`=excluded.`Name`,`Data`=excluded.`Data`,`CreatedAt`=excluded.`CreatedAt`,`CreatedBy`=excluded.`CreatedBy`,`LastUpdatedAt`=excluded.`LastUpdatedAt`,`LastUpdatedBy`=excluded.`LastUpdatedBy`")
 	if err != nil {
 		return err
@@ -81,7 +81,7 @@ func UpsertSite(ctx context.Context, db *sqlx.DB, obj models.Site) error {
 	return err
 }
 
-func UpsertSiteTx(ctx context.Context, tx *sqlx.Tx, obj models.Site) error {
+func UpsertSiteTx(ctx context.Context, tx *sqlx.Tx, obj model.Site) error {
 	stmt, err := tx.PrepareNamedContext(ctx, "INSERT INTO Sites VALUES (:Id,:Name,:Data,:CreatedAt,:CreatedBy,:LastUpdatedAt,:LastUpdatedBy) ON CONFLICT(Id) DO UPDATE SET `Id`=excluded.`Id`,`Name`=excluded.`Name`,`Data`=excluded.`Data`,`CreatedAt`=excluded.`CreatedAt`,`CreatedBy`=excluded.`CreatedBy`,`LastUpdatedAt`=excluded.`LastUpdatedAt`,`LastUpdatedBy`=excluded.`LastUpdatedBy`")
 	if err != nil {
 		return err
@@ -95,8 +95,8 @@ func UpsertSiteTx(ctx context.Context, tx *sqlx.Tx, obj models.Site) error {
 	return err
 }
 
-func FindSiteById(ctx context.Context, db *sqlx.DB, keyId string) (*models.Site, error) {
-	obj := models.Site{}
+func FindSiteById(ctx context.Context, db *sqlx.DB, keyId string) (*model.Site, error) {
+	obj := model.Site{}
 
 	err := db.QueryRowx("SELECT * FROM Sites WHERE Id=?", keyId).StructScan(&obj)
 
@@ -110,7 +110,7 @@ func FindSiteById(ctx context.Context, db *sqlx.DB, keyId string) (*models.Site,
 	return &obj, nil
 }
 
-func UpsertItem(ctx context.Context, db *sqlx.DB, obj models.Item) error {
+func UpsertItem(ctx context.Context, db *sqlx.DB, obj model.Item) error {
 	stmt, err := db.PrepareNamedContext(ctx, "INSERT INTO Items VALUES (:Id,:Data,:CreatedAt,:CreatedBy,:LastUpdatedAt,:LastUpdatedBy) ON CONFLICT(Id) DO UPDATE SET `Id`=excluded.`Id`,`Data`=excluded.`Data`,`CreatedAt`=excluded.`CreatedAt`,`CreatedBy`=excluded.`CreatedBy`,`LastUpdatedAt`=excluded.`LastUpdatedAt`,`LastUpdatedBy`=excluded.`LastUpdatedBy`")
 	if err != nil {
 		return err
@@ -124,7 +124,7 @@ func UpsertItem(ctx context.Context, db *sqlx.DB, obj models.Item) error {
 	return err
 }
 
-func UpsertItemTx(ctx context.Context, tx *sqlx.Tx, obj models.Item) error {
+func UpsertItemTx(ctx context.Context, tx *sqlx.Tx, obj model.Item) error {
 	stmt, err := tx.PrepareNamedContext(ctx, "INSERT INTO Items VALUES (:Id,:Data,:CreatedAt,:CreatedBy,:LastUpdatedAt,:LastUpdatedBy) ON CONFLICT(Id) DO UPDATE SET `Id`=excluded.`Id`,`Data`=excluded.`Data`,`CreatedAt`=excluded.`CreatedAt`,`CreatedBy`=excluded.`CreatedBy`,`LastUpdatedAt`=excluded.`LastUpdatedAt`,`LastUpdatedBy`=excluded.`LastUpdatedBy`")
 	if err != nil {
 		return err
@@ -138,8 +138,8 @@ func UpsertItemTx(ctx context.Context, tx *sqlx.Tx, obj models.Item) error {
 	return err
 }
 
-func FindItemById(ctx context.Context, db *sqlx.DB, keyId string) (*models.Item, error) {
-	obj := models.Item{}
+func FindItemById(ctx context.Context, db *sqlx.DB, keyId string) (*model.Item, error) {
+	obj := model.Item{}
 
 	err := db.QueryRowx("SELECT * FROM Items WHERE Id=?", keyId).StructScan(&obj)
 
@@ -153,7 +153,7 @@ func FindItemById(ctx context.Context, db *sqlx.DB, keyId string) (*models.Item,
 	return &obj, nil
 }
 
-func UpsertGroup(ctx context.Context, db *sqlx.DB, obj models.Group) error {
+func UpsertGroup(ctx context.Context, db *sqlx.DB, obj model.Group) error {
 	stmt, err := db.PrepareNamedContext(ctx, "INSERT INTO Groups VALUES (:Id,:Name,:Data,:CreatedAt,:CreatedBy,:LastUpdatedAt,:LastUpdatedBy) ON CONFLICT(Id) DO UPDATE SET `Id`=excluded.`Id`,`Name`=excluded.`Name`,`Data`=excluded.`Data`,`CreatedAt`=excluded.`CreatedAt`,`CreatedBy`=excluded.`CreatedBy`,`LastUpdatedAt`=excluded.`LastUpdatedAt`,`LastUpdatedBy`=excluded.`LastUpdatedBy`")
 	if err != nil {
 		return err
@@ -167,7 +167,7 @@ func UpsertGroup(ctx context.Context, db *sqlx.DB, obj models.Group) error {
 	return err
 }
 
-func UpsertGroupTx(ctx context.Context, tx *sqlx.Tx, obj models.Group) error {
+func UpsertGroupTx(ctx context.Context, tx *sqlx.Tx, obj model.Group) error {
 	stmt, err := tx.PrepareNamedContext(ctx, "INSERT INTO Groups VALUES (:Id,:Name,:Data,:CreatedAt,:CreatedBy,:LastUpdatedAt,:LastUpdatedBy) ON CONFLICT(Id) DO UPDATE SET `Id`=excluded.`Id`,`Name`=excluded.`Name`,`Data`=excluded.`Data`,`CreatedAt`=excluded.`CreatedAt`,`CreatedBy`=excluded.`CreatedBy`,`LastUpdatedAt`=excluded.`LastUpdatedAt`,`LastUpdatedBy`=excluded.`LastUpdatedBy`")
 	if err != nil {
 		return err
@@ -181,8 +181,8 @@ func UpsertGroupTx(ctx context.Context, tx *sqlx.Tx, obj models.Group) error {
 	return err
 }
 
-func FindGroupById(ctx context.Context, db *sqlx.DB, keyId string) (*models.Group, error) {
-	obj := models.Group{}
+func FindGroupById(ctx context.Context, db *sqlx.DB, keyId string) (*model.Group, error) {
+	obj := model.Group{}
 
 	err := db.QueryRowx("SELECT * FROM Groups WHERE Id=?", keyId).StructScan(&obj)
 
@@ -196,7 +196,7 @@ func FindGroupById(ctx context.Context, db *sqlx.DB, keyId string) (*models.Grou
 	return &obj, nil
 }
 
-func UpsertAsset(ctx context.Context, db *sqlx.DB, obj models.Asset) error {
+func UpsertAsset(ctx context.Context, db *sqlx.DB, obj model.Asset) error {
 	stmt, err := db.PrepareNamedContext(ctx, "INSERT INTO Assets VALUES (:Id,:State,:Type,:Data,:CreatedAt,:CreatedBy,:LastUpdatedAt,:LastUpdatedBy) ON CONFLICT(Id) DO UPDATE SET `Id`=excluded.`Id`,`State`=excluded.`State`,`Type`=excluded.`Type`,`Data`=excluded.`Data`,`CreatedAt`=excluded.`CreatedAt`,`CreatedBy`=excluded.`CreatedBy`,`LastUpdatedAt`=excluded.`LastUpdatedAt`,`LastUpdatedBy`=excluded.`LastUpdatedBy`")
 	if err != nil {
 		return err
@@ -210,7 +210,7 @@ func UpsertAsset(ctx context.Context, db *sqlx.DB, obj models.Asset) error {
 	return err
 }
 
-func UpsertAssetTx(ctx context.Context, tx *sqlx.Tx, obj models.Asset) error {
+func UpsertAssetTx(ctx context.Context, tx *sqlx.Tx, obj model.Asset) error {
 	stmt, err := tx.PrepareNamedContext(ctx, "INSERT INTO Assets VALUES (:Id,:State,:Type,:Data,:CreatedAt,:CreatedBy,:LastUpdatedAt,:LastUpdatedBy) ON CONFLICT(Id) DO UPDATE SET `Id`=excluded.`Id`,`State`=excluded.`State`,`Type`=excluded.`Type`,`Data`=excluded.`Data`,`CreatedAt`=excluded.`CreatedAt`,`CreatedBy`=excluded.`CreatedBy`,`LastUpdatedAt`=excluded.`LastUpdatedAt`,`LastUpdatedBy`=excluded.`LastUpdatedBy`")
 	if err != nil {
 		return err
@@ -224,8 +224,8 @@ func UpsertAssetTx(ctx context.Context, tx *sqlx.Tx, obj models.Asset) error {
 	return err
 }
 
-func FindAssetById(ctx context.Context, db *sqlx.DB, keyId string) (*models.Asset, error) {
-	obj := models.Asset{}
+func FindAssetById(ctx context.Context, db *sqlx.DB, keyId string) (*model.Asset, error) {
+	obj := model.Asset{}
 
 	err := db.QueryRowx("SELECT * FROM Assets WHERE Id=?", keyId).StructScan(&obj)
 
@@ -239,7 +239,7 @@ func FindAssetById(ctx context.Context, db *sqlx.DB, keyId string) (*models.Asse
 	return &obj, nil
 }
 
-func UpsertSiteUser(ctx context.Context, db *sqlx.DB, obj models.SiteUser) error {
+func UpsertSiteUser(ctx context.Context, db *sqlx.DB, obj model.SiteUser) error {
 	stmt, err := db.PrepareNamedContext(ctx, "INSERT INTO SiteUsers VALUES (:UserId,:SiteId,:Order,:CreatedAt,:CreatedBy,:LastUpdatedAt,:LastUpdatedBy) ON CONFLICT(UserId,SiteId) DO UPDATE SET `UserId`=excluded.`UserId`,`SiteId`=excluded.`SiteId`,`Order`=excluded.`Order`,`CreatedAt`=excluded.`CreatedAt`,`CreatedBy`=excluded.`CreatedBy`,`LastUpdatedAt`=excluded.`LastUpdatedAt`,`LastUpdatedBy`=excluded.`LastUpdatedBy`")
 	if err != nil {
 		return err
@@ -253,7 +253,7 @@ func UpsertSiteUser(ctx context.Context, db *sqlx.DB, obj models.SiteUser) error
 	return err
 }
 
-func UpsertSiteUserTx(ctx context.Context, tx *sqlx.Tx, obj models.SiteUser) error {
+func UpsertSiteUserTx(ctx context.Context, tx *sqlx.Tx, obj model.SiteUser) error {
 	stmt, err := tx.PrepareNamedContext(ctx, "INSERT INTO SiteUsers VALUES (:UserId,:SiteId,:Order,:CreatedAt,:CreatedBy,:LastUpdatedAt,:LastUpdatedBy) ON CONFLICT(UserId,SiteId) DO UPDATE SET `UserId`=excluded.`UserId`,`SiteId`=excluded.`SiteId`,`Order`=excluded.`Order`,`CreatedAt`=excluded.`CreatedAt`,`CreatedBy`=excluded.`CreatedBy`,`LastUpdatedAt`=excluded.`LastUpdatedAt`,`LastUpdatedBy`=excluded.`LastUpdatedBy`")
 	if err != nil {
 		return err
@@ -267,8 +267,8 @@ func UpsertSiteUserTx(ctx context.Context, tx *sqlx.Tx, obj models.SiteUser) err
 	return err
 }
 
-func FindSiteUserByUserIdAndSiteId(ctx context.Context, db *sqlx.DB, keyUserId string, keySiteId string) (*models.SiteUser, error) {
-	obj := models.SiteUser{}
+func FindSiteUserByUserIdAndSiteId(ctx context.Context, db *sqlx.DB, keyUserId string, keySiteId string) (*model.SiteUser, error) {
+	obj := model.SiteUser{}
 
 	err := db.QueryRowx("SELECT * FROM SiteUsers WHERE UserId=?AND SiteId=?", keyUserId, keySiteId).StructScan(&obj)
 
@@ -282,7 +282,7 @@ func FindSiteUserByUserIdAndSiteId(ctx context.Context, db *sqlx.DB, keyUserId s
 	return &obj, nil
 }
 
-func UpsertItemGroup(ctx context.Context, db *sqlx.DB, obj models.ItemGroup) error {
+func UpsertItemGroup(ctx context.Context, db *sqlx.DB, obj model.ItemGroup) error {
 	stmt, err := db.PrepareNamedContext(ctx, "INSERT INTO ItemGroups VALUES (:ItemId,:GroupId,:Order,:CreatedAt,:CreatedBy,:LastUpdatedAt,:LastUpdatedBy) ON CONFLICT(ItemId,GroupId) DO UPDATE SET `ItemId`=excluded.`ItemId`,`GroupId`=excluded.`GroupId`,`Order`=excluded.`Order`,`CreatedAt`=excluded.`CreatedAt`,`CreatedBy`=excluded.`CreatedBy`,`LastUpdatedAt`=excluded.`LastUpdatedAt`,`LastUpdatedBy`=excluded.`LastUpdatedBy`")
 	if err != nil {
 		return err
@@ -296,7 +296,7 @@ func UpsertItemGroup(ctx context.Context, db *sqlx.DB, obj models.ItemGroup) err
 	return err
 }
 
-func UpsertItemGroupTx(ctx context.Context, tx *sqlx.Tx, obj models.ItemGroup) error {
+func UpsertItemGroupTx(ctx context.Context, tx *sqlx.Tx, obj model.ItemGroup) error {
 	stmt, err := tx.PrepareNamedContext(ctx, "INSERT INTO ItemGroups VALUES (:ItemId,:GroupId,:Order,:CreatedAt,:CreatedBy,:LastUpdatedAt,:LastUpdatedBy) ON CONFLICT(ItemId,GroupId) DO UPDATE SET `ItemId`=excluded.`ItemId`,`GroupId`=excluded.`GroupId`,`Order`=excluded.`Order`,`CreatedAt`=excluded.`CreatedAt`,`CreatedBy`=excluded.`CreatedBy`,`LastUpdatedAt`=excluded.`LastUpdatedAt`,`LastUpdatedBy`=excluded.`LastUpdatedBy`")
 	if err != nil {
 		return err
@@ -310,8 +310,8 @@ func UpsertItemGroupTx(ctx context.Context, tx *sqlx.Tx, obj models.ItemGroup) e
 	return err
 }
 
-func FindItemGroupByItemIdAndGroupId(ctx context.Context, db *sqlx.DB, keyItemId string, keyGroupId string) (*models.ItemGroup, error) {
-	obj := models.ItemGroup{}
+func FindItemGroupByItemIdAndGroupId(ctx context.Context, db *sqlx.DB, keyItemId string, keyGroupId string) (*model.ItemGroup, error) {
+	obj := model.ItemGroup{}
 
 	err := db.QueryRowx("SELECT * FROM ItemGroups WHERE ItemId=?AND GroupId=?", keyItemId, keyGroupId).StructScan(&obj)
 
@@ -325,7 +325,7 @@ func FindItemGroupByItemIdAndGroupId(ctx context.Context, db *sqlx.DB, keyItemId
 	return &obj, nil
 }
 
-func UpsertItemAsset(ctx context.Context, db *sqlx.DB, obj models.ItemAsset) error {
+func UpsertItemAsset(ctx context.Context, db *sqlx.DB, obj model.ItemAsset) error {
 	stmt, err := db.PrepareNamedContext(ctx, "INSERT INTO ItemAssets VALUES (:ItemId,:AssetId,:Order,:CreatedAt,:CreatedBy,:LastUpdatedAt,:LastUpdatedBy) ON CONFLICT(ItemId,AssetId) DO UPDATE SET `ItemId`=excluded.`ItemId`,`AssetId`=excluded.`AssetId`,`Order`=excluded.`Order`,`CreatedAt`=excluded.`CreatedAt`,`CreatedBy`=excluded.`CreatedBy`,`LastUpdatedAt`=excluded.`LastUpdatedAt`,`LastUpdatedBy`=excluded.`LastUpdatedBy`")
 	if err != nil {
 		return err
@@ -339,7 +339,7 @@ func UpsertItemAsset(ctx context.Context, db *sqlx.DB, obj models.ItemAsset) err
 	return err
 }
 
-func UpsertItemAssetTx(ctx context.Context, tx *sqlx.Tx, obj models.ItemAsset) error {
+func UpsertItemAssetTx(ctx context.Context, tx *sqlx.Tx, obj model.ItemAsset) error {
 	stmt, err := tx.PrepareNamedContext(ctx, "INSERT INTO ItemAssets VALUES (:ItemId,:AssetId,:Order,:CreatedAt,:CreatedBy,:LastUpdatedAt,:LastUpdatedBy) ON CONFLICT(ItemId,AssetId) DO UPDATE SET `ItemId`=excluded.`ItemId`,`AssetId`=excluded.`AssetId`,`Order`=excluded.`Order`,`CreatedAt`=excluded.`CreatedAt`,`CreatedBy`=excluded.`CreatedBy`,`LastUpdatedAt`=excluded.`LastUpdatedAt`,`LastUpdatedBy`=excluded.`LastUpdatedBy`")
 	if err != nil {
 		return err
@@ -353,8 +353,8 @@ func UpsertItemAssetTx(ctx context.Context, tx *sqlx.Tx, obj models.ItemAsset) e
 	return err
 }
 
-func FindItemAssetByItemIdAndAssetId(ctx context.Context, db *sqlx.DB, keyItemId string, keyAssetId string) (*models.ItemAsset, error) {
-	obj := models.ItemAsset{}
+func FindItemAssetByItemIdAndAssetId(ctx context.Context, db *sqlx.DB, keyItemId string, keyAssetId string) (*model.ItemAsset, error) {
+	obj := model.ItemAsset{}
 
 	err := db.QueryRowx("SELECT * FROM ItemAssets WHERE ItemId=?AND AssetId=?", keyItemId, keyAssetId).StructScan(&obj)
 
