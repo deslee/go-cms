@@ -91,7 +91,6 @@ func writeQueryMethodsForModel(model Model, fieldsToQueryOn []Field, f *File) {
 		Lit(selectQuery),
 	}
 
-
 	methodNameEnding := ""
 
 	// append the keys as sql parameterized arguments
@@ -105,14 +104,13 @@ func writeQueryMethodsForModel(model Model, fieldsToQueryOn []Field, f *File) {
 
 	}
 
-
 	f.Func().Id(fmt.Sprintf("Find%sBy%s", model.StructName, methodNameEnding)).Params(
-		params...
+		params...,
 	).Params(Op("*").Qual("github.com/deslee/cms/models", model.StructName), Error()).Block(
 		Id("obj").Op(":=").Qual("github.com/deslee/cms/models", model.StructName).Values(),
 		Line(),
 		Id("err").Op(":=").Id("db.QueryRowx").Call(
-			queryRowArguments...
+			queryRowArguments...,
 		).Add(Op(".")).Add(Id("StructScan")).Call(Op("&").Id("obj")),
 		Line(),
 		If(Id("err").Op("!=").Id("nil")).Block(
@@ -128,6 +126,7 @@ func writeQueryMethodsForModel(model Model, fieldsToQueryOn []Field, f *File) {
 
 func writeUpsertMethodForModel(model Model, f *File) {
 	writeUpsertMethodForModelForType(model, f, "DB")
+	f.Line()
 	writeUpsertMethodForModelForType(model, f, "Tx")
 }
 
@@ -227,9 +226,15 @@ func (f Field) needsGetter() bool {
 
 func getModel(i interface{}) Model {
 	columns := recursivelyGetColumns(reflect.TypeOf(i).Elem())
+	structName := reflect.TypeOf(i).Elem().Name()
+	modelTabler, ok := i.(tabler)
+	if ok == false {
+		panic(fmt.Sprintf("Model %s must implement tabler! Write a Table() method e.g: \nfunc (%s) TableName() string {\n\treturn \"%ss\"\n}", structName, structName, structName))
+	}
+
 	return Model{
-		StructName: reflect.TypeOf(i).Elem().Name(),
-		TableName:  (i.(tabler)).TableName(),
+		StructName: structName,
+		TableName:  modelTabler.TableName(),
 		Fields:     columns,
 	}
 }

@@ -71,12 +71,13 @@ func UpsertSite(ctx context.Context, db *sqlx.DB, input SiteInput) (SiteResult, 
 		site Site
 	)
 
+	// start transaction
 	tx, err := db.BeginTxx(ctx, nil)
 	if err != nil {
 		return UnexpectedErrorSiteResult(err), nil
 	}
 
-
+	// get the current logged in user
 	user, err := UserFromContext(ctx, db)
 	if err != nil {
 		return UnexpectedErrorSiteResult(err), nil
@@ -84,7 +85,9 @@ func UpsertSite(ctx context.Context, db *sqlx.DB, input SiteInput) (SiteResult, 
 	if user == nil {
 		return SiteResult{GenericResult: GenericErrorMessage(UnauthenticatedMsg)}, nil
 	}
+
 	if input.ID == nil {
+		// if we are creating, just generate an id
 		site = Site{
 			Id:          generateId(),
 			Name:        input.Name,
@@ -92,6 +95,9 @@ func UpsertSite(ctx context.Context, db *sqlx.DB, input SiteInput) (SiteResult, 
 			AuditFields: CreateAuditFields(ctx, nil),
 		}
 	} else {
+		// otherwise, we need to do some validations...
+
+		// validate that the user has access to the site
 		existingSite, err := getSiteById(ctx, db, *input.ID)
 		if err != nil {
 			return UnexpectedErrorSiteResult(err), nil
@@ -99,10 +105,11 @@ func UpsertSite(ctx context.Context, db *sqlx.DB, input SiteInput) (SiteResult, 
 		if existingSite == nil {
 			return SiteResult{GenericResult: GenericErrorMessage(fmt.Sprintf("Site %s does not exist", *input.ID))}, nil
 		}
-		if validated, err := assertUserHasAccessToSite(ctx, db, existingSite.Id); validated == false || err != nil {
-			if err != nil {
-				log.Printf("%s", err)
-			}
+		validated, err := assertUserHasAccessToSite(ctx, db, existingSite.Id)
+		if err != nil {
+			return UnexpectedErrorSiteResult(err), nil
+		}
+		if validated == false {
 			return SiteResult{GenericResult: GenericErrorMessage(UnauthenticatedMsg)}, nil
 		}
 		site = Site{
@@ -112,28 +119,32 @@ func UpsertSite(ctx context.Context, db *sqlx.DB, input SiteInput) (SiteResult, 
 			AuditFields: CreateAuditFields(ctx, &existingSite.AuditFields),
 		}
 	}
+
+	// upsert the site
 	err = repository.UpsertSiteTx(ctx, tx, site)
 	if err != nil {
 		return UnexpectedErrorSiteResult(err), nil
 	}
 
+	// associate the user with the site
 	siteUser := SiteUser{
 		UserId:      user.Id,
 		SiteId:      site.Id,
 		Order:       0,
 		AuditFields: CreateAuditFields(ctx, nil),
 	}
-
 	err = repository.UpsertSiteUserTx(ctx, tx, siteUser)
 	if err != nil {
 		return UnexpectedErrorSiteResult(err), nil
 	}
 
+	// commit transaction
 	err = tx.Commit()
 	if err != nil {
 		return UnexpectedErrorSiteResult(err), nil
 	}
 
+	// get the site back out to return to the user
 	existingSite, err := getSiteById(ctx, db, site.Id)
 	if err != nil {
 		return UnexpectedErrorSiteResult(err), nil
