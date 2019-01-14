@@ -2,18 +2,9 @@ package data
 
 import (
 	"context"
+	. "github.com/deslee/cms/models"
 	"github.com/jmoiron/sqlx"
 )
-
-type Item struct {
-	Id   string     `db:"Id"`
-	Data JSONObject `db:"Data"`
-	AuditFields
-}
-
-func (Item) TableName() string {
-	return "Items"
-}
 
 type ItemInput struct {
 	Id     *string  `json:"id"`
@@ -35,7 +26,7 @@ func GetItem(ctx context.Context, db *sqlx.DB, s string) (*Item, error) {
 	panic("not implemented")
 }
 
-func (item Item) Groups(ctx context.Context, db *sqlx.DB) ([]Group, error) {
+func GroupsFromItem(ctx context.Context, db *sqlx.DB, item Item) ([]Group, error) {
 	panic("not implemented")
 }
 

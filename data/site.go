@@ -4,20 +4,10 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	. "github.com/deslee/cms/models"
 	"github.com/jmoiron/sqlx"
 	"log"
 )
-
-type Site struct {
-	Id   string     `db:"Id"`
-	Name string     `db:"Name"`
-	Data JSONObject `db:"Data"`
-	AuditFields
-}
-
-func (Site) TableName() string {
-	return "Sites"
-}
 
 type SiteInput struct {
 	ID   *string `json:"id"`
@@ -31,18 +21,18 @@ type SiteResult struct {
 }
 
 func UnexpectedErrorSiteResult(err error) SiteResult {
-	return SiteResult{GenericResult:GenericErrorMessage(fmt.Sprintf("Unexpected error %s", err))}
+	return SiteResult{GenericResult: GenericErrorMessage(fmt.Sprintf("Unexpected error %s", err))}
 }
 
-func (site Site) Items(ctx context.Context, db *sqlx.DB) ([]Item, error) {
+func ItemsFromSite(ctx context.Context, db *sqlx.DB, site Site) ([]Item, error) {
 	panic("not implemented")
 }
 
-func (site Site) Groups(ctx context.Context, db *sqlx.DB) ([]Group, error) {
+func GroupsFromSite(ctx context.Context, db *sqlx.DB, site Site) ([]Group, error) {
 	panic("not implemented")
 }
 
-func (site Site) Assets(ctx context.Context, db *sqlx.DB) ([]Asset, error) {
+func AssetsFromSite(FromSitectx context.Context, db *sqlx.DB, site Site) ([]Asset, error) {
 	panic("not implemented")
 }
 
@@ -67,7 +57,6 @@ func DeleteSite(ctx context.Context, db *sqlx.DB, siteId string) (GenericResult,
 		}
 		return GenericErrorMessage(UnauthenticatedMsg), nil
 	}
-
 
 	_, err := db.Exec("DELETE FROM Sites WHERE Id=?", siteId)
 	if err != nil {

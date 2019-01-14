@@ -2,30 +2,19 @@ package data
 
 import (
 	"context"
+	. "github.com/deslee/cms/models"
 	"github.com/jmoiron/sqlx"
 )
 
-type Asset struct {
-	Id    string `db:"columnId"`
-	State string `db:"State"`
-	Type  string `db:"Type"`
-	Data  string `db:"Data"`
-	AuditFields
-}
-
-func (Asset) TableName() string {
-	return "Assets"
-}
-
-func (asset Asset) FileName() string {
+func FileNameFromAsset(asset Asset) string {
 	panic("not implemented")
 }
 
-func (asset Asset) Extension() string {
+func ExtensionFromAsset(asset Asset) string {
 	panic("not implemented")
 }
 
-func (asset Asset) Items(ctx context.Context, db *sqlx.DB) ([]Item, error) {
+func ItemsFromAsset(ctx context.Context, db *sqlx.DB, asset Asset) ([]Item, error) {
 	panic("not implemented")
 }
 

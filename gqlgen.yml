@@ -14,15 +14,15 @@ resolver:
   type: Resolver
 models:
   Site:
-    model: github.com/deslee/cms/data.Site
+    model: github.com/deslee/cms/models.Site
   Item:
-    model: github.com/deslee/cms/data.Item
+    model: github.com/deslee/cms/models.Item
   Group:
-    model: github.com/deslee/cms/data.Group
+    model: github.com/deslee/cms/models.Group
   Asset:
-    model: github.com/deslee/cms/data.Asset
+    model: github.com/deslee/cms/models.Asset
   User:
-    model: github.com/deslee/cms/data.User
+    model: github.com/deslee/cms/models.User
   GenericResult:
     model: github.com/deslee/cms/data.GenericResult
   ItemInput:

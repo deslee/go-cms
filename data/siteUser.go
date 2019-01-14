@@ -2,19 +2,9 @@ package data
 
 import (
 	"context"
+	. "github.com/deslee/cms/models"
 	"github.com/jmoiron/sqlx"
 )
-
-type SiteUser struct {
-	UserId string `db:"UserId"`
-	SiteId string `db:"SiteId"`
-	Order  int    `db:"Order"`
-	AuditFields
-}
-
-func (SiteUser) TableName() string {
-	return "SiteUsers"
-}
 
 func AddUserToSite(ctx context.Context, db *sqlx.DB, userId string, siteId string) (GenericResult, error) {
 	siteUser := SiteUser{
@@ -31,4 +21,3 @@ func AddUserToSite(ctx context.Context, db *sqlx.DB, userId string, siteId strin
 
 	return GenericSuccess(), nil
 }
-

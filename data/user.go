@@ -3,6 +3,7 @@ package data
 import (
 	"context"
 	"fmt"
+	. "github.com/deslee/cms/models"
 	"github.com/dgrijalva/jwt-go"
 	"github.com/jmoiron/sqlx"
 	"golang.org/x/crypto/bcrypt"
@@ -13,19 +14,6 @@ const SigningKey = "abcdefgjasiojdaoidjabcdefgjasiojdaoidjabcdefsgjasiojdaoidj" 
 const UnauthenticatedMsg = "Not Authenticated"
 
 type UserContextKey string
-
-type User struct {
-	Id       string     `db:"Id"`
-	Email    string     `db:"Email"`
-	Password string     `db:"Password"`
-	Salt     string     `db:"Salt"`
-	Data     JSONObject `db:"Data"`
-	AuditFields
-}
-
-func (User) TableName() string {
-	return "Users"
-}
 
 type LoginInput struct {
 	Email    string `json:"email"`
@@ -56,10 +44,10 @@ type UserResult struct {
 }
 
 func UnexpectedErrorUserResult(err error) UserResult {
-	return UserResult{GenericResult:GenericErrorMessage(fmt.Sprintf("Unexpected error %s", err))}
+	return UserResult{GenericResult: GenericErrorMessage(fmt.Sprintf("Unexpected error %s", err))}
 }
 func UnexpectedLoginErrorResult(err error) LoginResult {
-	return LoginResult{GenericResult:GenericErrorMessage(fmt.Sprintf("Unexpected error %s", err))}
+	return LoginResult{GenericResult: GenericErrorMessage(fmt.Sprintf("Unexpected error %s", err))}
 }
 
 func UserIdFromContext(ctx context.Context) string {
@@ -87,7 +75,7 @@ func UserFromContext(ctx context.Context, db *sqlx.DB) (*User, error) {
 	return RepoFindUserById(ctx, db, userId)
 }
 
-func (user User) Sites(ctx context.Context, db *sqlx.DB) ([]Site, error) {
+func SitesFromUser(ctx context.Context, db *sqlx.DB, user User) ([]Site, error) {
 	panic("not implemented")
 }
 
@@ -115,7 +103,7 @@ func UpdateUser(ctx context.Context, db *sqlx.DB, user UserInput) (UserResult, e
 
 func Register(ctx context.Context, db *sqlx.DB, registration RegisterInput) (UserResult, error) {
 	// get the existing user, make sure it doesnt already exist
-	existingUser, err := getUserByEmail(ctx, db, registration.Email);
+	existingUser, err := getUserByEmail(ctx, db, registration.Email)
 	if err != nil {
 		return UnexpectedErrorUserResult(err), nil
 	}
@@ -195,8 +183,8 @@ func Login(ctx context.Context, db *sqlx.DB, login LoginInput) (LoginResult, err
 }
 
 /**
-	Given a token string, return a new context with the user identity embedded
- */
+Given a token string, return a new context with the user identity embedded
+*/
 func ParseTokenToContext(ctx context.Context, tokenString string) (context.Context, error) {
 	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
 		// Don't forget to validated the alg is what you expect:
@@ -223,8 +211,8 @@ func ParseTokenToContext(ctx context.Context, tokenString string) (context.Conte
 }
 
 /**
-	Creates a JWT given a user
- */
+Creates a JWT given a user
+*/
 func generateToken(user User) string {
 	const hoursExpire = 7 * 24
 	token := jwt.NewWithClaims(jwt.SigningMethodHS512, jwt.MapClaims{
@@ -239,8 +227,8 @@ func generateToken(user User) string {
 }
 
 /**
-	Returns true if user has access to the site, otherwise false
- */
+Returns true if user has access to the site, otherwise false
+*/
 func assertUserHasAccessToSite(ctx context.Context, db *sqlx.DB, siteId string) (bool, error) {
 	userId := UserIdFromContext(ctx)
 	if len(userId) == 0 {
@@ -257,4 +245,3 @@ func assertUserHasAccessToSite(ctx context.Context, db *sqlx.DB, siteId string) 
 	}
 	return true, nil
 }
-

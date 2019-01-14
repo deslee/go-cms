@@ -2,7 +2,8 @@ package cms
 
 import (
 	"context"
-	"github.com/deslee/cms/data"
+	. "github.com/deslee/cms/data"
+	. "github.com/deslee/cms/models"
 	"github.com/jmoiron/sqlx"
 	"log"
 	"runtime/debug"
@@ -36,150 +37,150 @@ func (r *Resolver) User() UserResolver {
 
 type assetResolver struct{ *Resolver }
 
-func (r *assetResolver) Items(ctx context.Context, obj *data.Asset) ([]data.Item, error) {
-	return obj.Items(ctx, r.DB)
+func (r *assetResolver) Items(ctx context.Context, obj *Asset) ([]Item, error) {
+	return ItemsFromAsset(ctx, r.DB, *obj)
 }
 
 type groupResolver struct{ *Resolver }
 
-func (r *groupResolver) Items(ctx context.Context, obj *data.Group) ([]data.Item, error) {
-	return obj.Items(ctx, r.DB)
+func (r *groupResolver) Items(ctx context.Context, obj *Group) ([]Item, error) {
+	return ItemsFromGroup(ctx, r.DB, *obj)
 }
 
 type itemResolver struct{ *Resolver }
 
-func (r *itemResolver) Groups(ctx context.Context, obj *data.Item) ([]data.Group, error) {
-	return obj.Groups(ctx, r.DB)
+func (r *itemResolver) Groups(ctx context.Context, obj *Item) ([]Group, error) {
+	return GroupsFromItem(ctx, r.DB, *obj)
 }
 
 type mutationResolver struct{ *Resolver }
 
-func (r *mutationResolver) AddUserToSite(ctx context.Context, userId string, siteId string) (res data.GenericResult, err error) {
+func (r *mutationResolver) AddUserToSite(ctx context.Context, userId string, siteId string) (res GenericResult, err error) {
 	defer func() {
 		if r := recover(); r != nil {
 			log.Printf("%s %s", r, debug.Stack())
-			res = data.GenericError()
+			res = GenericError()
 		}
 	}()
-	res, err = data.AddUserToSite(ctx, r.DB, userId, siteId)
+	res, err = AddUserToSite(ctx, r.DB, userId, siteId)
 	return res, err
 }
-func (r *mutationResolver) DeleteAsset(ctx context.Context, assetId string) (res data.GenericResult, err error) {
+func (r *mutationResolver) DeleteAsset(ctx context.Context, assetId string) (res GenericResult, err error) {
 	defer func() {
 		if r := recover(); r != nil {
 			log.Printf("%s %s", r, debug.Stack())
-			res = data.GenericError()
+			res = GenericError()
 		}
 	}()
-	res, err = data.DeleteAsset(ctx, r.DB, assetId)
+	res, err = DeleteAsset(ctx, r.DB, assetId)
 	return res, err
 }
-func (r *mutationResolver) DeleteItem(ctx context.Context, itemId string) (res data.GenericResult, err error) {
+func (r *mutationResolver) DeleteItem(ctx context.Context, itemId string) (res GenericResult, err error) {
 	defer func() {
 		if r := recover(); r != nil {
 			log.Printf("%s %s", r, debug.Stack())
-			res = data.GenericError()
+			res = GenericError()
 		}
 	}()
-	res, err = data.DeleteItem(ctx, r.DB, itemId)
+	res, err = DeleteItem(ctx, r.DB, itemId)
 	return res, err
 }
-func (r *mutationResolver) DeleteSite(ctx context.Context, siteId string) (res data.GenericResult, err error) {
+func (r *mutationResolver) DeleteSite(ctx context.Context, siteId string) (res GenericResult, err error) {
 	defer func() {
 		if r := recover(); r != nil {
 			log.Printf("%s %s", r, debug.Stack())
-			res = data.GenericError()
+			res = GenericError()
 		}
 	}()
-	res, err = data.DeleteSite(ctx, r.DB, siteId)
+	res, err = DeleteSite(ctx, r.DB, siteId)
 	return res, err
 }
-func (r *mutationResolver) Login(ctx context.Context, login data.LoginInput) (res data.LoginResult, err error) {
+func (r *mutationResolver) Login(ctx context.Context, login LoginInput) (res LoginResult, err error) {
 	defer func() {
 		if r := recover(); r != nil {
 			log.Printf("%s %s", r, debug.Stack())
-			res = data.LoginResult{GenericResult: data.GenericError()}
+			res = LoginResult{GenericResult: GenericError()}
 		}
 	}()
-	res, err = data.Login(ctx, r.DB, login)
+	res, err = Login(ctx, r.DB, login)
 	return res, err
 }
-func (r *mutationResolver) Register(ctx context.Context, registration data.RegisterInput) (res data.UserResult, err error) {
+func (r *mutationResolver) Register(ctx context.Context, registration RegisterInput) (res UserResult, err error) {
 	defer func() {
 		if r := recover(); r != nil {
 			log.Printf("%s %s", r, debug.Stack())
-			res = data.UserResult{GenericResult: data.GenericError()}
+			res = UserResult{GenericResult: GenericError()}
 		}
 	}()
-	res, err = data.Register(ctx, r.DB, registration)
+	res, err = Register(ctx, r.DB, registration)
 	return res, err
 }
-func (r *mutationResolver) UpdateUser(ctx context.Context, user data.UserInput) (res data.UserResult, err error) {
+func (r *mutationResolver) UpdateUser(ctx context.Context, user UserInput) (res UserResult, err error) {
 	defer func() {
 		if r := recover(); r != nil {
 			log.Printf("%s %s", r, debug.Stack())
-			res = data.UserResult{GenericResult: data.GenericError()}
+			res = UserResult{GenericResult: GenericError()}
 		}
 	}()
-	res, err = data.UpdateUser(ctx, r.DB, user)
+	res, err = UpdateUser(ctx, r.DB, user)
 	return res, err
 }
-func (r *mutationResolver) UpsertItem(ctx context.Context, item data.ItemInput, siteId string) (res data.ItemResult, err error) {
+func (r *mutationResolver) UpsertItem(ctx context.Context, item ItemInput, siteId string) (res ItemResult, err error) {
 	defer func() {
 		if r := recover(); r != nil {
 			log.Printf("%s %s", r, debug.Stack())
-			res = data.ItemResult{GenericResult: data.GenericError()}
+			res = ItemResult{GenericResult: GenericError()}
 		}
 	}()
-	res, err = data.UpsertItem(ctx, r.DB, item, siteId)
+	res, err = UpsertItem(ctx, r.DB, item, siteId)
 	return res, err
 }
-func (r *mutationResolver) UpsertSite(ctx context.Context, site data.SiteInput) (res data.SiteResult, err error) {
+func (r *mutationResolver) UpsertSite(ctx context.Context, site SiteInput) (res SiteResult, err error) {
 	defer func() {
 		if r := recover(); r != nil {
 			log.Printf("%s %s", r, debug.Stack())
-			res = data.SiteResult{GenericResult: data.GenericError()}
+			res = SiteResult{GenericResult: GenericError()}
 		}
 	}()
-	res, err = data.UpsertSite(ctx, r.DB, site)
+	res, err = UpsertSite(ctx, r.DB, site)
 	return res, err
 }
 
 type queryResolver struct{ *Resolver }
 
-func (r *queryResolver) Asset(ctx context.Context, assetId string) (*data.Asset, error) {
-	return data.GetAsset(ctx, r.DB, assetId)
+func (r *queryResolver) Asset(ctx context.Context, assetId string) (*Asset, error) {
+	return GetAsset(ctx, r.DB, assetId)
 }
-func (r *queryResolver) Items(ctx context.Context, siteId string) ([]data.Item, error) {
-	return data.GetItems(ctx, r.DB, siteId)
+func (r *queryResolver) Items(ctx context.Context, siteId string) ([]Item, error) {
+	return GetItems(ctx, r.DB, siteId)
 }
-func (r *queryResolver) Item(ctx context.Context, itemId string) (*data.Item, error) {
-	return data.GetItem(ctx, r.DB, itemId)
+func (r *queryResolver) Item(ctx context.Context, itemId string) (*Item, error) {
+	return GetItem(ctx, r.DB, itemId)
 }
-func (r *queryResolver) Me(ctx context.Context) (*data.User, error) {
-	return data.UserFromContext(ctx, r.DB)
+func (r *queryResolver) Me(ctx context.Context) (*User, error) {
+	return UserFromContext(ctx, r.DB)
 }
-func (r *queryResolver) Site(ctx context.Context, siteId string) (*data.Site, error) {
-	return data.GetSite(ctx, r.DB, siteId)
+func (r *queryResolver) Site(ctx context.Context, siteId string) (*Site, error) {
+	return GetSite(ctx, r.DB, siteId)
 }
-func (r *queryResolver) Sites(ctx context.Context) ([]data.Site, error) {
-	return data.GetSites(ctx, r.DB)
+func (r *queryResolver) Sites(ctx context.Context) ([]Site, error) {
+	return GetSites(ctx, r.DB)
 }
 
 type siteResolver struct{ *Resolver }
 
-func (r *siteResolver) Assets(ctx context.Context, obj *data.Site) ([]data.Asset, error) {
-	return obj.Assets(ctx, r.DB)
+func (r *siteResolver) Assets(ctx context.Context, obj *Site) ([]Asset, error) {
+	return AssetsFromSite(ctx, r.DB, *obj)
 }
-func (r *siteResolver) Groups(ctx context.Context, obj *data.Site) ([]data.Group, error) {
-	return obj.Groups(ctx, r.DB)
+func (r *siteResolver) Groups(ctx context.Context, obj *Site) ([]Group, error) {
+	return GroupsFromSite(ctx, r.DB, *obj)
 }
-func (r *siteResolver) Items(ctx context.Context, obj *data.Site) ([]data.Item, error) {
-	return obj.Items(ctx, r.DB)
+func (r *siteResolver) Items(ctx context.Context, obj *Site) ([]Item, error) {
+	return ItemsFromSite(ctx, r.DB, *obj)
 }
 
 type userResolver struct{ *Resolver }
 
-func (r *userResolver) Sites(ctx context.Context, obj *data.User) ([]data.Site, error) {
-	return obj.Sites(ctx, r.DB)
+func (r *userResolver) Sites(ctx context.Context, obj *User) ([]Site, error) {
+	return SitesFromUser(ctx, r.DB, *obj)
 }

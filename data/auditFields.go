@@ -2,15 +2,9 @@ package data
 
 import (
 	"context"
+	. "github.com/deslee/cms/models"
 	"time"
 )
-
-type AuditFields struct {
-	CreatedAt     string `db:"CreatedAt"`
-	CreatedBy     string `db:"CreatedBy"`
-	LastUpdatedAt string `db:"LastUpdatedAt"`
-	LastUpdatedBy string `db:"LastUpdatedBy"`
-}
 
 func CreateAuditFields(ctx context.Context, previous *AuditFields) AuditFields {
 	var (
