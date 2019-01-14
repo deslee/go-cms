@@ -82,7 +82,7 @@ func SitesFromUser(ctx context.Context, db *sqlx.DB, user User) ([]Site, error) 
 
 func UpdateUser(ctx context.Context, db *sqlx.DB, user UserInput) (UserResult, error) {
 	// get the user by email, make sure it exists
-	existingUser, err := repository.GetUserByEmail(ctx, db, user.Email)
+	existingUser, err := repository.FindUserByEmail(ctx, db, user.Email)
 	if err != nil {
 		return UnexpectedErrorUserResult(err), nil
 	}
@@ -104,7 +104,7 @@ func UpdateUser(ctx context.Context, db *sqlx.DB, user UserInput) (UserResult, e
 
 func Register(ctx context.Context, db *sqlx.DB, registration RegisterInput) (UserResult, error) {
 	// get the existing user, make sure it doesnt already exist
-	existingUser, err := repository.GetUserByEmail(ctx, db, registration.Email)
+	existingUser, err := repository.FindUserByEmail(ctx, db, registration.Email)
 	if err != nil {
 		return UnexpectedErrorUserResult(err), nil
 	}
@@ -155,7 +155,7 @@ func Register(ctx context.Context, db *sqlx.DB, registration RegisterInput) (Use
 
 func Login(ctx context.Context, db *sqlx.DB, login LoginInput) (LoginResult, error) {
 	// get the user from the database, make sure it's not nil
-	user, err := repository.GetUserByEmail(ctx, db, login.Email)
+	user, err := repository.FindUserByEmail(ctx, db, login.Email)
 	if err != nil {
 		return UnexpectedLoginErrorResult(err), nil
 	}

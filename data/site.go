@@ -70,6 +70,13 @@ func UpsertSite(ctx context.Context, db *sqlx.DB, input SiteInput) (SiteResult, 
 	var (
 		site Site
 	)
+
+	tx, err := db.BeginTxx(ctx, nil)
+	if err != nil {
+		return UnexpectedErrorSiteResult(err), nil
+	}
+
+
 	user, err := UserFromContext(ctx, db)
 	if err != nil {
 		return UnexpectedErrorSiteResult(err), nil
@@ -105,19 +112,31 @@ func UpsertSite(ctx context.Context, db *sqlx.DB, input SiteInput) (SiteResult, 
 			AuditFields: CreateAuditFields(ctx, &existingSite.AuditFields),
 		}
 	}
-	err = repository.UpsertSite(ctx, db, site)
+	err = repository.UpsertSiteTx(ctx, tx, site)
 	if err != nil {
 		return UnexpectedErrorSiteResult(err), nil
 	}
 
-	_, err = AddUserToSite(ctx, db, user.Id, site.Id)
+	siteUser := SiteUser{
+		UserId:      user.Id,
+		SiteId:      site.Id,
+		Order:       0,
+		AuditFields: CreateAuditFields(ctx, nil),
+	}
+
+	err = repository.UpsertSiteUserTx(ctx, tx, siteUser)
+	if err != nil {
+		return UnexpectedErrorSiteResult(err), nil
+	}
+
+	err = tx.Commit()
 	if err != nil {
 		return UnexpectedErrorSiteResult(err), nil
 	}
 
 	existingSite, err := getSiteById(ctx, db, site.Id)
 	if err != nil {
-		return SiteResult{GenericResult: GenericErrorMessage(fmt.Sprintf("Error: %s", err))}, nil
+		return UnexpectedErrorSiteResult(err), nil
 	}
 
 	return SiteResult{
@@ -136,7 +155,7 @@ func getAllSitesForUserInContext(ctx context.Context, db *sqlx.DB) ([]Site, erro
 		return sites, nil
 	}
 
-	rows, err := db.Queryx(`SELECT S.* FROM SiteUsers SU INNER JOIN Sites S WHERE SU.UserId=?`, user.Id)
+	rows, err := db.Queryx(`SELECT S.* FROM SiteUsers SU INNER JOIN Sites S ON S.Id=SU.SiteId WHERE SU.UserId=?`, user.Id)
 	if err != nil {
 		fmt.Printf("Failed to query SiteUsers: %s", err)
 		return nil, err

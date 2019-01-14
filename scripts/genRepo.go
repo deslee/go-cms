@@ -49,6 +49,99 @@ func generate(modelTypes ...interface{}) {
 }
 
 func generateRepositoryMethods(model Model, f *File) {
+	writeUpsertMethodForModel(model, f)
+
+	// create a slice of fields that are keys
+	writeQueryMethodsForModel(model, model.primaryKeyFields(), f)
+
+	for _, field := range model.Fields {
+		if field.needsGetter() {
+			writeQueryMethodsForModel(model, []Field{field}, f)
+		}
+	}
+
+	f.Line()
+}
+
+func writeQueryMethodsForModel(model Model, fieldsToQueryOn []Field, f *File) {
+	f.Line()
+
+	// create params of the getter method
+	params := []Code{
+		Id("ctx").Qual("context", "Context"),
+		Id("db").Add(Op("*")).Qual("github.com/jmoiron/sqlx", "DB"),
+	}
+
+	// begin creating select query
+	selectQuery := fmt.Sprintf("SELECT * FROM %s WHERE ", model.TableName)
+
+	// append the keys as arguments
+	// append the keys as query params
+	for idx, keyField := range fieldsToQueryOn {
+		params = append(params, Id(fmt.Sprintf("key%s", keyField.FieldName)).Id("string"))
+		if idx == 0 {
+			selectQuery += fmt.Sprintf("%s=?", keyField.FieldName)
+		} else {
+			selectQuery += fmt.Sprintf("AND %s=?", keyField.FieldName)
+		}
+	}
+
+	// create the arguments code block for the actual db call
+	queryRowArguments := []Code{
+		Lit(selectQuery),
+	}
+
+
+	methodNameEnding := ""
+
+	// append the keys as sql parameterized arguments
+	for idx, keyField := range fieldsToQueryOn {
+		queryRowArguments = append(queryRowArguments, Id(fmt.Sprintf("key%s", keyField.FieldName)))
+		if idx == 0 {
+			methodNameEnding += keyField.FieldName
+		} else {
+			methodNameEnding += fmt.Sprintf("And%s", keyField.FieldName)
+		}
+
+	}
+
+
+	f.Func().Id(fmt.Sprintf("Find%sBy%s", model.StructName, methodNameEnding)).Params(
+		params...
+	).Params(Op("*").Qual("github.com/deslee/cms/models", model.StructName), Error()).Block(
+		Id("obj").Op(":=").Qual("github.com/deslee/cms/models", model.StructName).Values(),
+		Line(),
+		Id("err").Op(":=").Id("db.QueryRowx").Call(
+			queryRowArguments...
+		).Add(Op(".")).Add(Id("StructScan")).Call(Op("&").Id("obj")),
+		Line(),
+		If(Id("err").Op("!=").Id("nil")).Block(
+			If(Id("err")).Op("==").Qual("database/sql", "ErrNoRows").Block(
+				Return(List(Id("nil"), Id("nil"))),
+			),
+			Return(List(Id("nil"), Id("err"))),
+		),
+		Line(),
+		Return(List(Op("&").Id("obj"), Id("nil"))),
+	)
+}
+
+func writeUpsertMethodForModel(model Model, f *File) {
+	writeUpsertMethodForModelForType(model, f, "DB")
+	writeUpsertMethodForModelForType(model, f, "Tx")
+}
+
+func writeUpsertMethodForModelForType(model Model, f *File, ctxCreator string) {
+	var functionName = fmt.Sprintf("Upsert%s", model.StructName)
+
+	if ctxCreator == "DB" {
+
+	} else if ctxCreator == "Tx" {
+		functionName += "Tx"
+	} else {
+		panic(fmt.Sprintf("Unrecognized argument to writeUpsertMethodForModelForType %s", ctxCreator))
+	}
+
 	// generate upsert sql
 	upsertSql := `INSERT INTO ` + model.TableName + ` VALUES (`
 	for idx, field := range model.Fields {
@@ -57,7 +150,17 @@ func generateRepositoryMethods(model Model, f *File) {
 			upsertSql += ","
 		}
 	}
-	upsertSql += `) ON CONFLICT(Id) DO UPDATE SET `
+	upsertSql += `) ON CONFLICT(`
+
+	for idx, field := range model.primaryKeyFields() {
+		if idx == 0 {
+			upsertSql += field.columnName()
+		} else {
+			upsertSql += fmt.Sprintf(",%s", field.columnName())
+		}
+	}
+
+	upsertSql += `) DO UPDATE SET `
 	for idx, field := range model.Fields {
 		upsertSql += fmt.Sprintf("`%s`=excluded.`%s`", field.columnName(), field.columnName())
 		if idx < (len(model.Fields) - 1) {
@@ -65,10 +168,10 @@ func generateRepositoryMethods(model Model, f *File) {
 		}
 	}
 
-	f.Func().Id(fmt.Sprintf("Upsert%s", model.StructName)).Params(
-		Id("ctx").Qual("context", "Context"), Id("db").Add(Op("*")).Qual("github.com/jmoiron/sqlx", "DB"), Id("obj").Qual("github.com/deslee/cms/models", model.StructName),
+	f.Func().Id(functionName).Params(
+		Id("ctx").Qual("context", "Context"), Id(strings.ToLower(ctxCreator)).Add(Op("*")).Qual("github.com/jmoiron/sqlx", ctxCreator), Id("obj").Qual("github.com/deslee/cms/models", model.StructName),
 	).Error().Block(
-		List(Id("stmt"), Id("err")).Op(":=").Id("db.PrepareNamedContext").Call(Id("ctx"), Lit(upsertSql)),
+		List(Id("stmt"), Id("err")).Op(":=").Id(fmt.Sprintf("%s.PrepareNamedContext", strings.ToLower(ctxCreator))).Call(Id("ctx"), Lit(upsertSql)),
 		If(Id("err").Op("!=").Id("nil")).Block(
 			Return(Id("err")),
 		),
@@ -81,37 +184,22 @@ func generateRepositoryMethods(model Model, f *File) {
 		Line(),
 		Return(Id("err")),
 	)
-
-	if model.singlePrimaryKeyField() != nil {
-		f.Line()
-
-		f.Func().Id(fmt.Sprintf("Find%sBy%s", model.StructName, model.singlePrimaryKeyField().FieldName)).Params(
-			Id("ctx").Qual("context", "Context"), Id("db").Add(Op("*")).Qual("github.com/jmoiron/sqlx", "DB"), Id("val").Id("string"),
-		).Params(Op("*").Qual("github.com/deslee/cms/models", model.StructName), Error()).Block(
-			Id("obj").Op(":=").Qual("github.com/deslee/cms/models", model.StructName).Values(),
-			Line(),
-			Id("err").Op(":=").Id("db.QueryRowx").Call(
-				Lit(fmt.Sprintf("SELECT * FROM %s WHERE %s=?", model.TableName, model.singlePrimaryKeyField().FieldName)), Id("val"),
-			).Add(Op(".")).Add(Id("StructScan")).Call(Op("&").Id("obj")),
-			Line(),
-			If(Id("err").Op("!=").Id("nil")).Block(
-				If(Id("err")).Op("==").Qual("database/sql", "ErrNoRows").Block(
-					Return(List(Id("nil"), Id("nil"))),
-				),
-				Return(List(Id("nil"), Id("err"))),
-			),
-			Line(),
-			Return(List(Op("&").Id("obj"), Id("nil"))),
-		)
-	}
-
-	f.Line()
 }
 
 type Model struct {
 	StructName string
 	TableName  string
 	Fields     []Field
+}
+
+func (model Model) primaryKeyFields() []Field {
+	var primaryKeyFields []Field
+	for _, field := range model.Fields {
+		if field.isPk() {
+			primaryKeyFields = append(primaryKeyFields, field)
+		}
+	}
+	return primaryKeyFields
 }
 
 type Field struct {
@@ -132,17 +220,9 @@ func (f Field) isPk() bool {
 	return len(isPk) > 0
 }
 
-func (m Model) singlePrimaryKeyField() *Field {
-	var primaryKeys []Field
-	for _, field := range m.Fields {
-		if field.isPk() {
-			primaryKeys = append(primaryKeys, field)
-		}
-	}
-	if len(primaryKeys) > 1 {
-		return nil
-	}
-	return &primaryKeys[0]
+func (f Field) needsGetter() bool {
+	needsGetter := f.TagMap["needsGetter"]
+	return len(needsGetter) > 0
 }
 
 func getModel(i interface{}) Model {

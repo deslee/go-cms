@@ -96,7 +96,7 @@ func (SiteUser) TableName() string {
 
 type User struct {
 	Id       string     `dbGen:"column:Id;Pk:1" db:"Id"`
-	Email    string     `dbGen:"column:Email;Getter:true" db:"Email"`
+	Email    string     `dbGen:"column:Email;needsGetter:true" db:"Email"`
 	Password string     `dbGen:"column:Password" db:"Password"`
 	Salt     string     `dbGen:"column:Salt" db:"Salt"`
 	Data     JSONObject `dbGen:"column:Data" db:"Data"`
