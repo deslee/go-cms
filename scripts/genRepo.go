@@ -27,13 +27,13 @@ func main() {
 }
 
 func generate(modelTypes ...interface{}) {
-	f := NewFile("data")
+	f := NewFile("repository")
 	for _, modelType := range modelTypes {
 		model := getModel(modelType)
 		generateRepositoryMethods(model, f)
 	}
 
-	repoFile, err := os.Create("./data/repository.go")
+	repoFile, err := os.Create("./repository/repository.go")
 	if err != nil {
 		panic(err)
 	}
@@ -62,7 +62,7 @@ func generateRepositoryMethods(model Model, f *File) {
 		}
 	}
 
-	f.Func().Id(fmt.Sprintf("RepoUpsert%s", model.StructName)).Params(
+	f.Func().Id(fmt.Sprintf("Upsert%s", model.StructName)).Params(
 		Id("ctx").Qual("context", "Context"), Id("db").Add(Op("*")).Qual("github.com/jmoiron/sqlx", "DB"), Id("obj").Qual("github.com/deslee/cms/models", model.StructName),
 	).Error().Block(
 		List(Id("stmt"), Id("err")).Op(":=").Id("db.PrepareNamedContext").Call(Id("ctx"), Lit(upsertSql)),
@@ -82,7 +82,7 @@ func generateRepositoryMethods(model Model, f *File) {
 	if model.singlePrimaryKeyField() != nil {
 		f.Line()
 
-		f.Func().Id(fmt.Sprintf("RepoFind%sBy%s", model.StructName, model.singlePrimaryKeyField().FieldName)).Params(
+		f.Func().Id(fmt.Sprintf("Find%sBy%s", model.StructName, model.singlePrimaryKeyField().FieldName)).Params(
 			Id("ctx").Qual("context", "Context"), Id("db").Add(Op("*")).Qual("github.com/jmoiron/sqlx", "DB"), Id("val").Id("string"),
 		).Params(Op("*").Qual("github.com/deslee/cms/models", model.StructName), Error()).Block(
 			Id("obj").Op(":=").Qual("github.com/deslee/cms/models", model.StructName).Values(),

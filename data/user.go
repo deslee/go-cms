@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	. "github.com/deslee/cms/models"
+	"github.com/deslee/cms/repository"
 	"github.com/dgrijalva/jwt-go"
 	"github.com/jmoiron/sqlx"
 	"golang.org/x/crypto/bcrypt"
@@ -72,7 +73,7 @@ func UserFromContext(ctx context.Context, db *sqlx.DB) (*User, error) {
 	}
 
 	// delegate to getUserById
-	return RepoFindUserById(ctx, db, userId)
+	return repository.FindUserById(ctx, db, userId)
 }
 
 func SitesFromUser(ctx context.Context, db *sqlx.DB, user User) ([]Site, error) {
@@ -81,7 +82,7 @@ func SitesFromUser(ctx context.Context, db *sqlx.DB, user User) ([]Site, error) 
 
 func UpdateUser(ctx context.Context, db *sqlx.DB, user UserInput) (UserResult, error) {
 	// get the user by email, make sure it exists
-	existingUser, err := getUserByEmail(ctx, db, user.Email)
+	existingUser, err := repository.GetUserByEmail(ctx, db, user.Email)
 	if err != nil {
 		return UnexpectedErrorUserResult(err), nil
 	}
@@ -103,7 +104,7 @@ func UpdateUser(ctx context.Context, db *sqlx.DB, user UserInput) (UserResult, e
 
 func Register(ctx context.Context, db *sqlx.DB, registration RegisterInput) (UserResult, error) {
 	// get the existing user, make sure it doesnt already exist
-	existingUser, err := getUserByEmail(ctx, db, registration.Email)
+	existingUser, err := repository.GetUserByEmail(ctx, db, registration.Email)
 	if err != nil {
 		return UnexpectedErrorUserResult(err), nil
 	}
@@ -141,7 +142,7 @@ func Register(ctx context.Context, db *sqlx.DB, registration RegisterInput) (Use
 	}
 
 	// grab the user back out
-	createdUser, err := RepoFindUserById(ctx, db, id)
+	createdUser, err := repository.FindUserById(ctx, db, id)
 	if err != nil {
 		return UnexpectedErrorUserResult(err), nil
 	}
@@ -154,7 +155,7 @@ func Register(ctx context.Context, db *sqlx.DB, registration RegisterInput) (Use
 
 func Login(ctx context.Context, db *sqlx.DB, login LoginInput) (LoginResult, error) {
 	// get the user from the database, make sure it's not nil
-	user, err := getUserByEmail(ctx, db, login.Email)
+	user, err := repository.GetUserByEmail(ctx, db, login.Email)
 	if err != nil {
 		return UnexpectedLoginErrorResult(err), nil
 	}

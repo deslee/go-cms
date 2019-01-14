@@ -3,6 +3,7 @@ package data
 import (
 	"context"
 	. "github.com/deslee/cms/models"
+	"github.com/deslee/cms/repository"
 	"github.com/jmoiron/sqlx"
 )
 
@@ -14,7 +15,7 @@ func AddUserToSite(ctx context.Context, db *sqlx.DB, userId string, siteId strin
 		AuditFields: CreateAuditFields(ctx, nil),
 	}
 
-	err := RepoUpsertSiteUser(ctx, db, siteUser)
+	err := repository.UpsertSiteUser(ctx, db, siteUser)
 	if err != nil {
 		return GenericUnexpectedError(err), nil
 	}

@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"fmt"
 	. "github.com/deslee/cms/models"
+	"github.com/deslee/cms/repository"
 	"github.com/jmoiron/sqlx"
 	"log"
 )
@@ -104,7 +105,7 @@ func UpsertSite(ctx context.Context, db *sqlx.DB, input SiteInput) (SiteResult, 
 			AuditFields: CreateAuditFields(ctx, &existingSite.AuditFields),
 		}
 	}
-	err = RepoUpsertSite(ctx, db, site)
+	err = repository.UpsertSite(ctx, db, site)
 	if err != nil {
 		return UnexpectedErrorSiteResult(err), nil
 	}
