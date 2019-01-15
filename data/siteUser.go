@@ -2,6 +2,7 @@ package data
 
 import (
 	"context"
+	"errors"
 	. "github.com/deslee/cms/model"
 	"github.com/deslee/cms/repository"
 	"github.com/jmoiron/sqlx"
@@ -21,4 +22,16 @@ func AddUserToSite(ctx context.Context, db *sqlx.DB, userId string, siteId strin
 	}
 
 	return GenericSuccess(), nil
+}
+
+func getAllSitesForUserInContext(ctx context.Context, db *sqlx.DB) ([]Site, error) {
+	user, err := UserFromContext(ctx, db)
+	if err != nil {
+		return nil, err
+	}
+	if user == nil {
+		return nil, errors.New("unauthorized")
+	}
+
+	return SitesFromUser(ctx, db, *user)
 }

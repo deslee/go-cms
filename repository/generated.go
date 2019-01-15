@@ -67,6 +67,24 @@ func FindUserByEmail(ctx context.Context, db *sqlx.DB, keyEmail string) (*model.
 	return &obj, nil
 }
 
+func ScanUserList(ctx context.Context, db *sqlx.DB, query string, args ...interface{}) ([]model.User, error) {
+	var list []model.User
+	rows, err := db.Queryx(query, args...)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	for rows.Next() {
+		var obj model.User
+		err = rows.StructScan(&obj)
+		if err != nil {
+			return nil, err
+		}
+		list = append(list, obj)
+	}
+	return list, nil
+}
+
 func UpsertSite(ctx context.Context, db *sqlx.DB, obj model.Site) error {
 	stmt, err := db.PrepareNamedContext(ctx, "INSERT INTO Sites VALUES (:Id,:Name,:Data,:CreatedAt,:CreatedBy,:LastUpdatedAt,:LastUpdatedBy) ON CONFLICT(Id) DO UPDATE SET `Id`=excluded.`Id`,`Name`=excluded.`Name`,`Data`=excluded.`Data`,`CreatedAt`=excluded.`CreatedAt`,`CreatedBy`=excluded.`CreatedBy`,`LastUpdatedAt`=excluded.`LastUpdatedAt`,`LastUpdatedBy`=excluded.`LastUpdatedBy`")
 	if err != nil {
@@ -108,6 +126,24 @@ func FindSiteById(ctx context.Context, db *sqlx.DB, keyId string) (*model.Site, 
 	}
 
 	return &obj, nil
+}
+
+func ScanSiteList(ctx context.Context, db *sqlx.DB, query string, args ...interface{}) ([]model.Site, error) {
+	var list []model.Site
+	rows, err := db.Queryx(query, args...)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	for rows.Next() {
+		var obj model.Site
+		err = rows.StructScan(&obj)
+		if err != nil {
+			return nil, err
+		}
+		list = append(list, obj)
+	}
+	return list, nil
 }
 
 func UpsertItem(ctx context.Context, db *sqlx.DB, obj model.Item) error {
@@ -153,6 +189,24 @@ func FindItemById(ctx context.Context, db *sqlx.DB, keyId string) (*model.Item, 
 	return &obj, nil
 }
 
+func ScanItemList(ctx context.Context, db *sqlx.DB, query string, args ...interface{}) ([]model.Item, error) {
+	var list []model.Item
+	rows, err := db.Queryx(query, args...)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	for rows.Next() {
+		var obj model.Item
+		err = rows.StructScan(&obj)
+		if err != nil {
+			return nil, err
+		}
+		list = append(list, obj)
+	}
+	return list, nil
+}
+
 func UpsertGroup(ctx context.Context, db *sqlx.DB, obj model.Group) error {
 	stmt, err := db.PrepareNamedContext(ctx, "INSERT INTO Groups VALUES (:Id,:Name,:Data,:CreatedAt,:CreatedBy,:LastUpdatedAt,:LastUpdatedBy) ON CONFLICT(Id) DO UPDATE SET `Id`=excluded.`Id`,`Name`=excluded.`Name`,`Data`=excluded.`Data`,`CreatedAt`=excluded.`CreatedAt`,`CreatedBy`=excluded.`CreatedBy`,`LastUpdatedAt`=excluded.`LastUpdatedAt`,`LastUpdatedBy`=excluded.`LastUpdatedBy`")
 	if err != nil {
@@ -194,6 +248,24 @@ func FindGroupById(ctx context.Context, db *sqlx.DB, keyId string) (*model.Group
 	}
 
 	return &obj, nil
+}
+
+func ScanGroupList(ctx context.Context, db *sqlx.DB, query string, args ...interface{}) ([]model.Group, error) {
+	var list []model.Group
+	rows, err := db.Queryx(query, args...)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	for rows.Next() {
+		var obj model.Group
+		err = rows.StructScan(&obj)
+		if err != nil {
+			return nil, err
+		}
+		list = append(list, obj)
+	}
+	return list, nil
 }
 
 func UpsertAsset(ctx context.Context, db *sqlx.DB, obj model.Asset) error {
@@ -239,6 +311,24 @@ func FindAssetById(ctx context.Context, db *sqlx.DB, keyId string) (*model.Asset
 	return &obj, nil
 }
 
+func ScanAssetList(ctx context.Context, db *sqlx.DB, query string, args ...interface{}) ([]model.Asset, error) {
+	var list []model.Asset
+	rows, err := db.Queryx(query, args...)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	for rows.Next() {
+		var obj model.Asset
+		err = rows.StructScan(&obj)
+		if err != nil {
+			return nil, err
+		}
+		list = append(list, obj)
+	}
+	return list, nil
+}
+
 func UpsertSiteUser(ctx context.Context, db *sqlx.DB, obj model.SiteUser) error {
 	stmt, err := db.PrepareNamedContext(ctx, "INSERT INTO SiteUsers VALUES (:UserId,:SiteId,:Order,:CreatedAt,:CreatedBy,:LastUpdatedAt,:LastUpdatedBy) ON CONFLICT(UserId,SiteId) DO UPDATE SET `UserId`=excluded.`UserId`,`SiteId`=excluded.`SiteId`,`Order`=excluded.`Order`,`CreatedAt`=excluded.`CreatedAt`,`CreatedBy`=excluded.`CreatedBy`,`LastUpdatedAt`=excluded.`LastUpdatedAt`,`LastUpdatedBy`=excluded.`LastUpdatedBy`")
 	if err != nil {
@@ -280,6 +370,24 @@ func FindSiteUserByUserIdAndSiteId(ctx context.Context, db *sqlx.DB, keyUserId s
 	}
 
 	return &obj, nil
+}
+
+func ScanSiteUserList(ctx context.Context, db *sqlx.DB, query string, args ...interface{}) ([]model.SiteUser, error) {
+	var list []model.SiteUser
+	rows, err := db.Queryx(query, args...)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	for rows.Next() {
+		var obj model.SiteUser
+		err = rows.StructScan(&obj)
+		if err != nil {
+			return nil, err
+		}
+		list = append(list, obj)
+	}
+	return list, nil
 }
 
 func UpsertItemGroup(ctx context.Context, db *sqlx.DB, obj model.ItemGroup) error {
@@ -325,6 +433,24 @@ func FindItemGroupByItemIdAndGroupId(ctx context.Context, db *sqlx.DB, keyItemId
 	return &obj, nil
 }
 
+func ScanItemGroupList(ctx context.Context, db *sqlx.DB, query string, args ...interface{}) ([]model.ItemGroup, error) {
+	var list []model.ItemGroup
+	rows, err := db.Queryx(query, args...)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	for rows.Next() {
+		var obj model.ItemGroup
+		err = rows.StructScan(&obj)
+		if err != nil {
+			return nil, err
+		}
+		list = append(list, obj)
+	}
+	return list, nil
+}
+
 func UpsertItemAsset(ctx context.Context, db *sqlx.DB, obj model.ItemAsset) error {
 	stmt, err := db.PrepareNamedContext(ctx, "INSERT INTO ItemAssets VALUES (:ItemId,:AssetId,:Order,:CreatedAt,:CreatedBy,:LastUpdatedAt,:LastUpdatedBy) ON CONFLICT(ItemId,AssetId) DO UPDATE SET `ItemId`=excluded.`ItemId`,`AssetId`=excluded.`AssetId`,`Order`=excluded.`Order`,`CreatedAt`=excluded.`CreatedAt`,`CreatedBy`=excluded.`CreatedBy`,`LastUpdatedAt`=excluded.`LastUpdatedAt`,`LastUpdatedBy`=excluded.`LastUpdatedBy`")
 	if err != nil {
@@ -366,4 +492,22 @@ func FindItemAssetByItemIdAndAssetId(ctx context.Context, db *sqlx.DB, keyItemId
 	}
 
 	return &obj, nil
+}
+
+func ScanItemAssetList(ctx context.Context, db *sqlx.DB, query string, args ...interface{}) ([]model.ItemAsset, error) {
+	var list []model.ItemAsset
+	rows, err := db.Queryx(query, args...)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	for rows.Next() {
+		var obj model.ItemAsset
+		err = rows.StructScan(&obj)
+		if err != nil {
+			return nil, err
+		}
+		list = append(list, obj)
+	}
+	return list, nil
 }

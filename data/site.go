@@ -2,7 +2,6 @@ package data
 
 import (
 	"context"
-	"database/sql"
 	"fmt"
 	. "github.com/deslee/cms/model"
 	"github.com/deslee/cms/repository"
@@ -26,15 +25,15 @@ func UnexpectedErrorSiteResult(err error) SiteResult {
 }
 
 func ItemsFromSite(ctx context.Context, db *sqlx.DB, site Site) ([]Item, error) {
-	panic("not implemented")
+	return repository.ScanItemList(ctx, db,"SELECT I.* FROM Items I WHERE I.SiteId=?", site.Id)
 }
 
 func GroupsFromSite(ctx context.Context, db *sqlx.DB, site Site) ([]Group, error) {
-	panic("not implemented")
+	return repository.ScanGroupList(ctx, db, "SELECT G.* FROM Groups G Where G.SiteId=?", site.Id)
 }
 
-func AssetsFromSite(FromSitectx context.Context, db *sqlx.DB, site Site) ([]Asset, error) {
-	panic("not implemented")
+func AssetsFromSite(ctx context.Context, db *sqlx.DB, site Site) ([]Asset, error) {
+	return repository.ScanAssetList(ctx, db, `SELECT A.* from Assets A WHERE A.SiteId=?`, site.Id)
 }
 
 func GetSites(ctx context.Context, db *sqlx.DB) ([]Site, error) {
@@ -42,13 +41,19 @@ func GetSites(ctx context.Context, db *sqlx.DB) ([]Site, error) {
 }
 
 func GetSite(ctx context.Context, db *sqlx.DB, siteId string) (*Site, error) {
-	if validated, err := assertUserHasAccessToSite(ctx, db, siteId); validated == false || err != nil {
-		if err != nil {
-			log.Printf("%s", err)
-		}
+	validated, err := assertUserHasAccessToSite(ctx, db, siteId)
+	if err != nil {
+		return nil, err
+	}
+	if validated == false {
 		return nil, nil
 	}
-	return getSiteById(ctx, db, siteId)
+
+	site, err := repository.FindSiteById(ctx, db, siteId)
+	if err != nil {
+		return nil, err
+	}
+	return site, nil
 }
 
 func DeleteSite(ctx context.Context, db *sqlx.DB, siteId string) (GenericResult, error) {
@@ -98,7 +103,7 @@ func UpsertSite(ctx context.Context, db *sqlx.DB, input SiteInput) (SiteResult, 
 		// otherwise, we need to do some validations...
 
 		// validate that the user has access to the site
-		existingSite, err := getSiteById(ctx, db, *input.ID)
+		existingSite, err := repository.FindSiteById(ctx, db, *input.ID)
 		if err != nil {
 			return UnexpectedErrorSiteResult(err), nil
 		}
@@ -145,7 +150,7 @@ func UpsertSite(ctx context.Context, db *sqlx.DB, input SiteInput) (SiteResult, 
 	}
 
 	// get the site back out to return to the user
-	existingSite, err := getSiteById(ctx, db, site.Id)
+	existingSite, err := repository.FindSiteById(ctx, db, site.Id)
 	if err != nil {
 		return UnexpectedErrorSiteResult(err), nil
 	}
@@ -154,47 +159,4 @@ func UpsertSite(ctx context.Context, db *sqlx.DB, input SiteInput) (SiteResult, 
 		GenericResult: GenericSuccess(),
 		Data:          existingSite,
 	}, nil
-}
-
-func getAllSitesForUserInContext(ctx context.Context, db *sqlx.DB) ([]Site, error) {
-	var (
-		sites []Site
-	)
-
-	user, err := UserFromContext(ctx, db)
-	if user == nil {
-		return sites, nil
-	}
-
-	rows, err := db.Queryx(`SELECT S.* FROM SiteUsers SU INNER JOIN Sites S ON S.Id=SU.SiteId WHERE SU.UserId=?`, user.Id)
-	if err != nil {
-		fmt.Printf("Failed to query SiteUsers: %s", err)
-		return nil, err
-	}
-	defer rows.Close()
-	for rows.Next() {
-		var site Site
-		err = rows.StructScan(&site)
-		if err != nil {
-			return nil, err
-		}
-		sites = append(sites, site)
-	}
-
-	return sites, nil
-}
-
-func getSiteById(ctx context.Context, db *sqlx.DB, id string) (*Site, error) {
-	site := Site{}
-
-	row := db.QueryRowx("SELECT  * FROM Sites WHERE Id=?", id)
-	err := row.StructScan(&site)
-	if err != nil {
-		if err == sql.ErrNoRows {
-			return nil, nil
-		}
-		return nil, err
-	}
-
-	return &site, nil
 }

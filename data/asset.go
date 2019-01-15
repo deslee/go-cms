@@ -3,6 +3,7 @@ package data
 import (
 	"context"
 	. "github.com/deslee/cms/model"
+	"github.com/deslee/cms/repository"
 	"github.com/jmoiron/sqlx"
 )
 
@@ -15,7 +16,7 @@ func ExtensionFromAsset(asset Asset) string {
 }
 
 func ItemsFromAsset(ctx context.Context, db *sqlx.DB, asset Asset) ([]Item, error) {
-	panic("not implemented")
+	return repository.ScanItemList(ctx, db, "SELECT I.* FROM ItemAssets IA INNER JOIN Items I on IA.ItemId = I.Id WHERE IA.AssetId=?", asset.Id)
 }
 
 func GetAsset(ctx context.Context, db *sqlx.DB, s string) (*Asset, error) {

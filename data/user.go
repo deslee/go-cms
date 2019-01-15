@@ -77,7 +77,7 @@ func UserFromContext(ctx context.Context, db *sqlx.DB) (*User, error) {
 }
 
 func SitesFromUser(ctx context.Context, db *sqlx.DB, user User) ([]Site, error) {
-	panic("not implemented")
+	return repository.ScanSiteList(ctx, db, `SELECT S.* FROM SiteUsers SU INNER JOIN Sites S ON S.Id=SU.SiteId WHERE SU.UserId=?`, user.Id)
 }
 
 func UpdateUser(ctx context.Context, db *sqlx.DB, user UserInput) (UserResult, error) {
@@ -132,11 +132,7 @@ func Register(ctx context.Context, db *sqlx.DB, registration RegisterInput) (Use
 	}
 
 	// insert the user into the table
-	stmt, err := db.PrepareNamed("INSERT INTO Users VALUES (:Id, :Email, :Password, :Salt, :Data,:CreatedBy,:LastUpdatedBy,:CreatedAt,:LastUpdatedAt)")
-	if err != nil {
-		return UnexpectedErrorUserResult(err), nil
-	}
-	_, err = stmt.Exec(user)
+	err = repository.UpsertUser(ctx, db, user)
 	if err != nil {
 		return UnexpectedErrorUserResult(err), nil
 	}

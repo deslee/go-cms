@@ -49,21 +49,52 @@ func generate(modelTypes ...interface{}) {
 }
 
 func generateRepositoryMethods(model Model, f *File) {
-	writeUpsertMethodForModel(model, f)
+	writeUpsertFunctionsForModel(model, f)
 
 	// create a slice of fields that are keys
-	writeQueryMethodsForModel(model, model.primaryKeyFields(), f)
+	writeGetterFunctionsForModel(model, model.primaryKeyFields(), f)
 
 	for _, field := range model.Fields {
 		if field.needsGetter() {
-			writeQueryMethodsForModel(model, []Field{field}, f)
+			writeGetterFunctionsForModel(model, []Field{field}, f)
 		}
 	}
+	writeQueryFunctionsForModel(model, f)
 
 	f.Line()
 }
 
-func writeQueryMethodsForModel(model Model, fieldsToQueryOn []Field, f *File) {
+func writeQueryFunctionsForModel(model Model, f *File) {
+	f.Line()
+
+	f.Func().Id(fmt.Sprintf("Scan%sList", model.StructName)).Params(
+		Id("ctx").Qual("context", "Context"),
+		Id("db").Add(Op("*")).Qual("github.com/jmoiron/sqlx", "DB"),
+		Id("query").Id("string"),
+		Id("args").Id("...interface{}"),
+	).Params(Index().Qual("github.com/deslee/cms/model", model.StructName), Error()).Block(
+		Var().Id("list").Index().Qual("github.com/deslee/cms/model", model.StructName),
+		List(Id("rows"), Id("err")).Op(":=").Id("db.Queryx").Call(
+			Id("query"),
+			Id("args..."),
+		),
+		If(Id("err").Op("!=").Id("nil")).Block(
+			Return(List(Id("nil"), Id("err"))),
+		),
+		Defer().Id("rows.Close").Call(),
+		For(Id("rows.Next").Call()).Block(
+			Var().Id("obj").Qual("github.com/deslee/cms/model", model.StructName),
+			Id("err").Op("=").Id("rows.StructScan").Call(Add(Op("&")).Id("obj")),
+			If(Id("err").Op("!=").Id("nil")).Block(
+				Return(List(Id("nil"), Id("err"))),
+			),
+			Id("list").Op("=").Id("append").Call(Id("list"), Id("obj")),
+		),
+		Return(Id("list"), Id("nil")),
+	)
+}
+
+func writeGetterFunctionsForModel(model Model, fieldsToQueryOn []Field, f *File) {
 	f.Line()
 
 	// create params of the getter method
@@ -124,7 +155,7 @@ func writeQueryMethodsForModel(model Model, fieldsToQueryOn []Field, f *File) {
 	)
 }
 
-func writeUpsertMethodForModel(model Model, f *File) {
+func writeUpsertFunctionsForModel(model Model, f *File) {
 	writeUpsertMethodForModelForType(model, f, "DB")
 	f.Line()
 	writeUpsertMethodForModelForType(model, f, "Tx")
