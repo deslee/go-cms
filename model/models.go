@@ -1,5 +1,10 @@
 package model
 
+import (
+	"encoding/json"
+	"log"
+)
+
 // WARNING: the struct fields must be in the same order as the columns in the database. this is just how the generated repository works.
 
 type JSONObject = string
@@ -28,12 +33,42 @@ func (Asset) TableName() string {
 	return "Assets"
 }
 
+func deserialize(jsonString string) map[string]interface{} {
+	var f interface{}
+	dataBytes := []byte(jsonString)
+	err := json.Unmarshal(dataBytes, &f)
+	if err != nil {
+		log.Printf("Error found %s", err)
+		return nil
+	}
+	data, ok := f.(map[string]interface{})
+	if ok {
+		return data
+	} else {
+		return nil
+	}
+}
+
 func (asset Asset) FileName() string {
-	return "not implemented"
+	data := deserialize(asset.Data)
+	originalFilename, ok := data["originalFilename"].(string)
+	if ok {
+		return originalFilename
+	} else {
+		log.Printf("Data.originalFilename is not a string! it is: %s", data["originalFilename"])
+		return ""
+	}
 }
 
 func (asset Asset) Extension() string {
-	return "not implemented"
+	data := deserialize(asset.Data)
+	extension, ok := data["extension"].(string)
+	if ok {
+		return extension
+	} else {
+		log.Printf("Data.extension is not a string! it is: %s", data["extension"])
+		return ""
+	}
 }
 
 type AuditFields struct {
