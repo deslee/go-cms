@@ -63,7 +63,7 @@ func UserIdFromContext(ctx context.Context) string {
 	return userId
 }
 
-func UserFromContext(ctx context.Context, db *sqlx.DB) (*User, error) {
+func QueryGetCurrentUser(ctx context.Context, db *sqlx.DB) (*User, error) {
 	// try to get the user id
 	userId := UserIdFromContext(ctx)
 
@@ -80,7 +80,7 @@ func SitesFromUser(ctx context.Context, db *sqlx.DB, user User) ([]Site, error) 
 	return repository.ScanSiteList(ctx, db, `SELECT S.* FROM SiteUsers SU INNER JOIN Sites S ON S.Id=SU.SiteId WHERE SU.UserId=?`, user.Id)
 }
 
-func UpdateUser(ctx context.Context, db *sqlx.DB, user UserInput) (UserResult, error) {
+func MutationUpdateUser(ctx context.Context, db *sqlx.DB, user UserInput) (UserResult, error) {
 	// get the user by email, make sure it exists
 	existingUser, err := repository.FindUserByEmail(ctx, db, user.Email)
 	if err != nil {
@@ -102,7 +102,7 @@ func UpdateUser(ctx context.Context, db *sqlx.DB, user UserInput) (UserResult, e
 	}, nil
 }
 
-func Register(ctx context.Context, db *sqlx.DB, registration RegisterInput) (UserResult, error) {
+func MutationRegister(ctx context.Context, db *sqlx.DB, registration RegisterInput) (UserResult, error) {
 	// get the existing user, make sure it doesnt already exist
 	existingUser, err := repository.FindUserByEmail(ctx, db, registration.Email)
 	if err != nil {

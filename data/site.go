@@ -25,7 +25,7 @@ func UnexpectedErrorSiteResult(err error) SiteResult {
 }
 
 func ItemsFromSite(ctx context.Context, db *sqlx.DB, site Site) ([]Item, error) {
-	return repository.ScanItemList(ctx, db,"SELECT I.* FROM Items I WHERE I.SiteId=?", site.Id)
+	return repository.ScanItemList(ctx, db, "SELECT I.* FROM Items I WHERE I.SiteId=?", site.Id)
 }
 
 func GroupsFromSite(ctx context.Context, db *sqlx.DB, site Site) ([]Group, error) {
@@ -36,11 +36,11 @@ func AssetsFromSite(ctx context.Context, db *sqlx.DB, site Site) ([]Asset, error
 	return repository.ScanAssetList(ctx, db, `SELECT A.* from Assets A WHERE A.SiteId=?`, site.Id)
 }
 
-func GetSites(ctx context.Context, db *sqlx.DB) ([]Site, error) {
+func QueryGetSites(ctx context.Context, db *sqlx.DB) ([]Site, error) {
 	return getAllSitesForUserInContext(ctx, db)
 }
 
-func GetSite(ctx context.Context, db *sqlx.DB, siteId string) (*Site, error) {
+func QueryGetSite(ctx context.Context, db *sqlx.DB, siteId string) (*Site, error) {
 	validated, err := assertUserHasAccessToSite(ctx, db, siteId)
 	if err != nil {
 		return nil, err
@@ -56,7 +56,7 @@ func GetSite(ctx context.Context, db *sqlx.DB, siteId string) (*Site, error) {
 	return site, nil
 }
 
-func DeleteSite(ctx context.Context, db *sqlx.DB, siteId string) (GenericResult, error) {
+func MutationDeleteSite(ctx context.Context, db *sqlx.DB, siteId string) (GenericResult, error) {
 	if validated, err := assertUserHasAccessToSite(ctx, db, siteId); validated == false || err != nil {
 		if err != nil {
 			log.Printf("%s", err)
@@ -71,7 +71,7 @@ func DeleteSite(ctx context.Context, db *sqlx.DB, siteId string) (GenericResult,
 	return GenericSuccess(), nil
 }
 
-func UpsertSite(ctx context.Context, db *sqlx.DB, input SiteInput) (SiteResult, error) {
+func MutationUpsertSite(ctx context.Context, db *sqlx.DB, input SiteInput) (SiteResult, error) {
 	var (
 		site Site
 	)
@@ -83,7 +83,7 @@ func UpsertSite(ctx context.Context, db *sqlx.DB, input SiteInput) (SiteResult, 
 	}
 
 	// get the current logged in user
-	user, err := UserFromContext(ctx, db)
+	user, err := QueryGetCurrentUser(ctx, db)
 	if err != nil {
 		return UnexpectedErrorSiteResult(err), nil
 	}

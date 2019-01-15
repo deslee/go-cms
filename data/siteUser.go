@@ -8,7 +8,7 @@ import (
 	"github.com/jmoiron/sqlx"
 )
 
-func AddUserToSite(ctx context.Context, db *sqlx.DB, userId string, siteId string) (GenericResult, error) {
+func MutationAddUserToSite(ctx context.Context, db *sqlx.DB, userId string, siteId string) (GenericResult, error) {
 	siteUser := SiteUser{
 		UserId:      userId,
 		SiteId:      siteId,
@@ -25,7 +25,7 @@ func AddUserToSite(ctx context.Context, db *sqlx.DB, userId string, siteId strin
 }
 
 func getAllSitesForUserInContext(ctx context.Context, db *sqlx.DB) ([]Site, error) {
-	user, err := UserFromContext(ctx, db)
+	user, err := QueryGetCurrentUser(ctx, db)
 	if err != nil {
 		return nil, err
 	}

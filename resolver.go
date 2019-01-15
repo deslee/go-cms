@@ -62,7 +62,7 @@ func (r *mutationResolver) AddUserToSite(ctx context.Context, userId string, sit
 			res = GenericError()
 		}
 	}()
-	res, err = AddUserToSite(ctx, r.DB, userId, siteId)
+	res, err = MutationAddUserToSite(ctx, r.DB, userId, siteId)
 	return res, err
 }
 func (r *mutationResolver) DeleteAsset(ctx context.Context, assetId string) (res GenericResult, err error) {
@@ -72,7 +72,7 @@ func (r *mutationResolver) DeleteAsset(ctx context.Context, assetId string) (res
 			res = GenericError()
 		}
 	}()
-	res, err = DeleteAsset(ctx, r.DB, assetId)
+	res, err = MutationDeleteAsset(ctx, r.DB, assetId)
 	return res, err
 }
 func (r *mutationResolver) DeleteItem(ctx context.Context, itemId string) (res GenericResult, err error) {
@@ -82,7 +82,7 @@ func (r *mutationResolver) DeleteItem(ctx context.Context, itemId string) (res G
 			res = GenericError()
 		}
 	}()
-	res, err = DeleteItem(ctx, r.DB, itemId)
+	res, err = MutationDeleteItem(ctx, r.DB, itemId)
 	return res, err
 }
 func (r *mutationResolver) DeleteSite(ctx context.Context, siteId string) (res GenericResult, err error) {
@@ -92,7 +92,7 @@ func (r *mutationResolver) DeleteSite(ctx context.Context, siteId string) (res G
 			res = GenericError()
 		}
 	}()
-	res, err = DeleteSite(ctx, r.DB, siteId)
+	res, err = MutationDeleteSite(ctx, r.DB, siteId)
 	return res, err
 }
 func (r *mutationResolver) Login(ctx context.Context, login LoginInput) (res LoginResult, err error) {
@@ -112,7 +112,7 @@ func (r *mutationResolver) Register(ctx context.Context, registration RegisterIn
 			res = UserResult{GenericResult: GenericError()}
 		}
 	}()
-	res, err = Register(ctx, r.DB, registration)
+	res, err = MutationRegister(ctx, r.DB, registration)
 	return res, err
 }
 func (r *mutationResolver) UpdateUser(ctx context.Context, user UserInput) (res UserResult, err error) {
@@ -122,7 +122,7 @@ func (r *mutationResolver) UpdateUser(ctx context.Context, user UserInput) (res 
 			res = UserResult{GenericResult: GenericError()}
 		}
 	}()
-	res, err = UpdateUser(ctx, r.DB, user)
+	res, err = MutationUpdateUser(ctx, r.DB, user)
 	return res, err
 }
 func (r *mutationResolver) UpsertItem(ctx context.Context, item ItemInput, siteId string) (res ItemResult, err error) {
@@ -132,7 +132,7 @@ func (r *mutationResolver) UpsertItem(ctx context.Context, item ItemInput, siteI
 			res = ItemResult{GenericResult: GenericError()}
 		}
 	}()
-	res, err = UpsertItem(ctx, r.DB, item, siteId)
+	res, err = MutationUpsertItem(ctx, r.DB, item, siteId)
 	return res, err
 }
 func (r *mutationResolver) UpsertSite(ctx context.Context, site SiteInput) (res SiteResult, err error) {
@@ -142,29 +142,29 @@ func (r *mutationResolver) UpsertSite(ctx context.Context, site SiteInput) (res 
 			res = SiteResult{GenericResult: GenericError()}
 		}
 	}()
-	res, err = UpsertSite(ctx, r.DB, site)
+	res, err = MutationUpsertSite(ctx, r.DB, site)
 	return res, err
 }
 
 type queryResolver struct{ *Resolver }
 
 func (r *queryResolver) Asset(ctx context.Context, assetId string) (*Asset, error) {
-	return GetAsset(ctx, r.DB, assetId)
+	return QueryGetAsset(ctx, r.DB, assetId)
 }
 func (r *queryResolver) Items(ctx context.Context, siteId string) ([]Item, error) {
-	return GetItems(ctx, r.DB, siteId)
+	return QueryGetItems(ctx, r.DB, siteId)
 }
 func (r *queryResolver) Item(ctx context.Context, itemId string) (*Item, error) {
-	return GetItem(ctx, r.DB, itemId)
+	return QueryGetItem(ctx, r.DB, itemId)
 }
 func (r *queryResolver) Me(ctx context.Context) (*User, error) {
-	return UserFromContext(ctx, r.DB)
+	return QueryGetCurrentUser(ctx, r.DB)
 }
 func (r *queryResolver) Site(ctx context.Context, siteId string) (*Site, error) {
-	return GetSite(ctx, r.DB, siteId)
+	return QueryGetSite(ctx, r.DB, siteId)
 }
 func (r *queryResolver) Sites(ctx context.Context) ([]Site, error) {
-	return GetSites(ctx, r.DB)
+	return QueryGetSites(ctx, r.DB)
 }
 
 type siteResolver struct{ *Resolver }

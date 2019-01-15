@@ -19,19 +19,19 @@ type ItemResult struct {
 	Data *Item `json:"data"`
 }
 
-func GetItems(ctx context.Context, db *sqlx.DB, s string) ([]Item, error) {
+func QueryGetItems(ctx context.Context, db *sqlx.DB, s string) ([]Item, error) {
 	panic("not implemented")
 }
 
-func GetItem(ctx context.Context, db *sqlx.DB, s string) (*Item, error) {
+func QueryGetItem(ctx context.Context, db *sqlx.DB, s string) (*Item, error) {
 	panic("not implemented")
 }
 
-func UpsertItem(ctx context.Context, db *sqlx.DB, item ItemInput, siteId string) (ItemResult, error) {
+func MutationUpsertItem(ctx context.Context, db *sqlx.DB, item ItemInput, siteId string) (ItemResult, error) {
 	panic("not implemented")
 }
 
-func DeleteItem(ctx context.Context, db *sqlx.DB, itemId string) (GenericResult, error) {
+func MutationDeleteItem(ctx context.Context, db *sqlx.DB, itemId string) (GenericResult, error) {
 	panic("not implemented")
 }
 
