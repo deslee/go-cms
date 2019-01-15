@@ -24,7 +24,7 @@ type ItemResult struct {
 
 func QueryGetItems(ctx context.Context, db *sqlx.DB, siteId string) ([]Item, error) {
 	// validate
-	hasAccess, err := assertContextUserHasAccessToSite(ctx, db, siteId)
+	hasAccess, err := AssertContextUserHasAccessToSite(ctx, db, siteId)
 	if err != nil {
 		return nil, err
 	}
@@ -53,7 +53,7 @@ func QueryGetItem(ctx context.Context, db *sqlx.DB, itemId string) (*Item, error
 	}
 
 	// validate
-	hasAccess, err := assertContextUserHasAccessToSite(ctx, db, item.SiteId)
+	hasAccess, err := AssertContextUserHasAccessToSite(ctx, db, item.SiteId)
 	if err != nil {
 		return nil, err
 	}
@@ -76,7 +76,7 @@ func MutationDeleteItem(ctx context.Context, db *sqlx.DB, itemId string) (Generi
 	}
 
 	// validate
-	hasAccess, err := assertContextUserHasAccessToSite(ctx, db, item.SiteId)
+	hasAccess, err := AssertContextUserHasAccessToSite(ctx, db, item.SiteId)
 	if err != nil {
 		return UnexpectedErrorGenericResult(err), nil
 	}
@@ -104,7 +104,7 @@ func MutationUpsertItem(ctx context.Context, db *sqlx.DB, input ItemInput, siteI
 	)
 
 	// validate
-	hasAccess, err := assertContextUserHasAccessToSite(ctx, db, siteId)
+	hasAccess, err := AssertContextUserHasAccessToSite(ctx, db, siteId)
 	if err != nil {
 		return UnexpectedErrorItemResult(err), nil
 	}
@@ -122,7 +122,7 @@ func MutationUpsertItem(ctx context.Context, db *sqlx.DB, input ItemInput, siteI
 	if input.Id == nil {
 		// generate an id
 		item = Item{
-			Id:          generateId(),
+			Id:          GenerateId(),
 			Type:        input.Type,
 			Data:        input.Data,
 			SiteId:      siteId,
@@ -144,7 +144,7 @@ func MutationUpsertItem(ctx context.Context, db *sqlx.DB, input ItemInput, siteI
 		}
 
 		// validate user has access
-		hasAccess, err := assertContextUserHasAccessToSite(ctx, db, existingItem.SiteId)
+		hasAccess, err := AssertContextUserHasAccessToSite(ctx, db, existingItem.SiteId)
 		if err != nil {
 			return UnexpectedErrorItemResult(err), nil
 		}
@@ -215,7 +215,7 @@ func MutationUpsertItem(ctx context.Context, db *sqlx.DB, input ItemInput, siteI
 		} else {
 			// otherwise, make a new one
 			group := Group{
-				Id:          generateId(),
+				Id:          GenerateId(),
 				SiteId:      siteId,
 				Name:        g,
 				Data:        "{}",

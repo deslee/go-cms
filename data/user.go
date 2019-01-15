@@ -112,7 +112,7 @@ func MutationRegister(ctx context.Context, db *sqlx.DB, registration RegisterInp
 	}
 
 	// generate an id
-	id := generateId()
+	id := GenerateId()
 
 	// construct the user object
 	user := User{
@@ -215,7 +215,7 @@ func generateToken(user User) string {
 /**
 Returns true if user has access to the site, otherwise false
 */
-func assertContextUserHasAccessToSite(ctx context.Context, db *sqlx.DB, siteId string) (bool, error) {
+func AssertContextUserHasAccessToSite(ctx context.Context, db *sqlx.DB, siteId string) (bool, error) {
 	userId := UserIdFromContext(ctx)
 	if len(userId) == 0 {
 		return false, nil

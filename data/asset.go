@@ -24,7 +24,7 @@ func QueryGetAsset(ctx context.Context, db *sqlx.DB, assetId string) (*Asset, er
 	}
 
 	// validate
-	hasAccess, err := assertContextUserHasAccessToSite(ctx, db, asset.SiteId)
+	hasAccess, err := AssertContextUserHasAccessToSite(ctx, db, asset.SiteId)
 	if err != nil {
 		return nil, err
 	}
@@ -47,7 +47,7 @@ func MutationDeleteAsset(ctx context.Context, db *sqlx.DB, assetId string) (Gene
 	}
 
 	// validate
-	hasAccess, err := assertContextUserHasAccessToSite(ctx, db, asset.SiteId)
+	hasAccess, err := AssertContextUserHasAccessToSite(ctx, db, asset.SiteId)
 	if err != nil {
 		return UnexpectedErrorGenericResult(err), nil
 	}

@@ -37,7 +37,7 @@ func QueryGetSites(ctx context.Context, db *sqlx.DB) ([]Site, error) {
 }
 
 func QueryGetSite(ctx context.Context, db *sqlx.DB, siteId string) (*Site, error) {
-	validated, err := assertContextUserHasAccessToSite(ctx, db, siteId)
+	validated, err := AssertContextUserHasAccessToSite(ctx, db, siteId)
 	if err != nil {
 		return nil, err
 	}
@@ -53,7 +53,7 @@ func QueryGetSite(ctx context.Context, db *sqlx.DB, siteId string) (*Site, error
 }
 
 func MutationDeleteSite(ctx context.Context, db *sqlx.DB, siteId string) (GenericResult, error) {
-	if validated, err := assertContextUserHasAccessToSite(ctx, db, siteId); validated == false || err != nil {
+	if validated, err := AssertContextUserHasAccessToSite(ctx, db, siteId); validated == false || err != nil {
 		if err != nil {
 			log.Printf("%s", err)
 		}
@@ -90,7 +90,7 @@ func MutationUpsertSite(ctx context.Context, db *sqlx.DB, input SiteInput) (Site
 	if input.ID == nil {
 		// if we are creating, just generate an id
 		site = Site{
-			Id:          generateId(),
+			Id:          GenerateId(),
 			Name:        input.Name,
 			Data:        input.Data,
 			AuditFields: CreateAuditFields(ctx),
@@ -106,7 +106,7 @@ func MutationUpsertSite(ctx context.Context, db *sqlx.DB, input SiteInput) (Site
 		if existingSite == nil {
 			return SiteResult{GenericResult: ErrorGenericResult(fmt.Sprintf("Site %s does not exist", *input.ID))}, nil
 		}
-		validated, err := assertContextUserHasAccessToSite(ctx, db, existingSite.Id)
+		validated, err := AssertContextUserHasAccessToSite(ctx, db, existingSite.Id)
 		if err != nil {
 			return UnexpectedErrorSiteResult(err), nil
 		}

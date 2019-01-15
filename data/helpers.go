@@ -10,7 +10,7 @@ func die(err error) {
 	}
 }
 
-func generateId() string {
+func GenerateId() string {
 	newUuid, err := uuid.NewRandom()
 	die(err)
 

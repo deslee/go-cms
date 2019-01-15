@@ -2,3 +2,4 @@ database.db
 *.sqlite
 .idea/
 *.exe
+assets/
