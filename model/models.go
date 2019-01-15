@@ -1,5 +1,7 @@
 package model
 
+// WARNING: the struct fields must be in the same order as the columns in the database. this is just how the generated repository works.
+
 type JSONObject = string
 
 type Site struct {
@@ -44,8 +46,8 @@ type AuditFields struct {
 type Group struct {
 	Id     string     `dbGen:"column:Id;Pk:1" db:"Id"`
 	SiteId string     `dbGen:"column:SiteId" db:"SiteId"`
-	Name   string     `dbGen:"column:Name" db:"Name"`
 	Data   JSONObject `dbGen:"column:Data" db:"Data"`
+	Name   string     `dbGen:"column:Name" db:"Name"`
 	AuditFields
 }
 
@@ -55,9 +57,9 @@ func (Group) TableName() string {
 
 type Item struct {
 	Id     string     `dbGen:"column:Id;Pk:1" db:"Id"`
-	Type   string     `dbGen:"column:Type" db:"Type"`
 	SiteId string     `dbGen:"column:SiteId" db:"SiteId"`
 	Data   JSONObject `dbGen:"column:Data" db:"Data"`
+	Type   string     `dbGen:"column:Type" db:"Type"`
 	AuditFields
 }
 

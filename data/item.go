@@ -228,7 +228,7 @@ func MutationUpsertItem(ctx context.Context, db *sqlx.DB, input ItemInput, siteI
 			}
 
 			itemGroup = ItemGroup{
-				ItemId:      igs[0].ItemId,
+				ItemId:      item.Id,
 				GroupId:     group.Id,
 				Order:       order,
 				AuditFields: CreateAuditFields(ctx),

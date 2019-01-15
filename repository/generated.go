@@ -217,7 +217,7 @@ func FindItemById(ctx context.Context, db *sqlx.DB, keyId string) (*model.Item, 
 	return &obj, nil
 }
 func UpsertItem(ctx context.Context, db *sqlx.DB, obj model.Item) error {
-	stmt, err := db.PrepareNamedContext(ctx, "INSERT INTO Items VALUES (:Id,:Type,:SiteId,:Data,:CreatedAt,:CreatedBy,:LastUpdatedAt,:LastUpdatedBy) ON CONFLICT(Id) DO UPDATE SET `Id`=excluded.`Id`,`Type`=excluded.`Type`,`SiteId`=excluded.`SiteId`,`Data`=excluded.`Data`,`CreatedAt`=excluded.`CreatedAt`,`CreatedBy`=excluded.`CreatedBy`,`LastUpdatedAt`=excluded.`LastUpdatedAt`,`LastUpdatedBy`=excluded.`LastUpdatedBy`")
+	stmt, err := db.PrepareNamedContext(ctx, "INSERT INTO Items VALUES (:Id,:SiteId,:Data,:Type,:CreatedAt,:CreatedBy,:LastUpdatedAt,:LastUpdatedBy) ON CONFLICT(Id) DO UPDATE SET `Id`=excluded.`Id`,`SiteId`=excluded.`SiteId`,`Data`=excluded.`Data`,`Type`=excluded.`Type`,`CreatedAt`=excluded.`CreatedAt`,`CreatedBy`=excluded.`CreatedBy`,`LastUpdatedAt`=excluded.`LastUpdatedAt`,`LastUpdatedBy`=excluded.`LastUpdatedBy`")
 	if err != nil {
 		return err
 	}
@@ -231,7 +231,7 @@ func UpsertItem(ctx context.Context, db *sqlx.DB, obj model.Item) error {
 }
 
 func UpsertItemTx(ctx context.Context, tx *sqlx.Tx, obj model.Item) error {
-	stmt, err := tx.PrepareNamedContext(ctx, "INSERT INTO Items VALUES (:Id,:Type,:SiteId,:Data,:CreatedAt,:CreatedBy,:LastUpdatedAt,:LastUpdatedBy) ON CONFLICT(Id) DO UPDATE SET `Id`=excluded.`Id`,`Type`=excluded.`Type`,`SiteId`=excluded.`SiteId`,`Data`=excluded.`Data`,`CreatedAt`=excluded.`CreatedAt`,`CreatedBy`=excluded.`CreatedBy`,`LastUpdatedAt`=excluded.`LastUpdatedAt`,`LastUpdatedBy`=excluded.`LastUpdatedBy`")
+	stmt, err := tx.PrepareNamedContext(ctx, "INSERT INTO Items VALUES (:Id,:SiteId,:Data,:Type,:CreatedAt,:CreatedBy,:LastUpdatedAt,:LastUpdatedBy) ON CONFLICT(Id) DO UPDATE SET `Id`=excluded.`Id`,`SiteId`=excluded.`SiteId`,`Data`=excluded.`Data`,`Type`=excluded.`Type`,`CreatedAt`=excluded.`CreatedAt`,`CreatedBy`=excluded.`CreatedBy`,`LastUpdatedAt`=excluded.`LastUpdatedAt`,`LastUpdatedBy`=excluded.`LastUpdatedBy`")
 	if err != nil {
 		return err
 	}
@@ -297,7 +297,7 @@ func FindGroupById(ctx context.Context, db *sqlx.DB, keyId string) (*model.Group
 	return &obj, nil
 }
 func UpsertGroup(ctx context.Context, db *sqlx.DB, obj model.Group) error {
-	stmt, err := db.PrepareNamedContext(ctx, "INSERT INTO Groups VALUES (:Id,:SiteId,:Name,:Data,:CreatedAt,:CreatedBy,:LastUpdatedAt,:LastUpdatedBy) ON CONFLICT(Id) DO UPDATE SET `Id`=excluded.`Id`,`SiteId`=excluded.`SiteId`,`Name`=excluded.`Name`,`Data`=excluded.`Data`,`CreatedAt`=excluded.`CreatedAt`,`CreatedBy`=excluded.`CreatedBy`,`LastUpdatedAt`=excluded.`LastUpdatedAt`,`LastUpdatedBy`=excluded.`LastUpdatedBy`")
+	stmt, err := db.PrepareNamedContext(ctx, "INSERT INTO Groups VALUES (:Id,:SiteId,:Data,:Name,:CreatedAt,:CreatedBy,:LastUpdatedAt,:LastUpdatedBy) ON CONFLICT(Id) DO UPDATE SET `Id`=excluded.`Id`,`SiteId`=excluded.`SiteId`,`Data`=excluded.`Data`,`Name`=excluded.`Name`,`CreatedAt`=excluded.`CreatedAt`,`CreatedBy`=excluded.`CreatedBy`,`LastUpdatedAt`=excluded.`LastUpdatedAt`,`LastUpdatedBy`=excluded.`LastUpdatedBy`")
 	if err != nil {
 		return err
 	}
@@ -311,7 +311,7 @@ func UpsertGroup(ctx context.Context, db *sqlx.DB, obj model.Group) error {
 }
 
 func UpsertGroupTx(ctx context.Context, tx *sqlx.Tx, obj model.Group) error {
-	stmt, err := tx.PrepareNamedContext(ctx, "INSERT INTO Groups VALUES (:Id,:SiteId,:Name,:Data,:CreatedAt,:CreatedBy,:LastUpdatedAt,:LastUpdatedBy) ON CONFLICT(Id) DO UPDATE SET `Id`=excluded.`Id`,`SiteId`=excluded.`SiteId`,`Name`=excluded.`Name`,`Data`=excluded.`Data`,`CreatedAt`=excluded.`CreatedAt`,`CreatedBy`=excluded.`CreatedBy`,`LastUpdatedAt`=excluded.`LastUpdatedAt`,`LastUpdatedBy`=excluded.`LastUpdatedBy`")
+	stmt, err := tx.PrepareNamedContext(ctx, "INSERT INTO Groups VALUES (:Id,:SiteId,:Data,:Name,:CreatedAt,:CreatedBy,:LastUpdatedAt,:LastUpdatedBy) ON CONFLICT(Id) DO UPDATE SET `Id`=excluded.`Id`,`SiteId`=excluded.`SiteId`,`Data`=excluded.`Data`,`Name`=excluded.`Name`,`CreatedAt`=excluded.`CreatedAt`,`CreatedBy`=excluded.`CreatedBy`,`LastUpdatedAt`=excluded.`LastUpdatedAt`,`LastUpdatedBy`=excluded.`LastUpdatedBy`")
 	if err != nil {
 		return err
 	}
