@@ -14,10 +14,11 @@ func (Site) TableName() string {
 }
 
 type Asset struct {
-	Id    string `dbGen:"column:Id;Pk:1" db:"Id"`
-	State string `dbGen:"column:State" db:"State"`
-	Type  string `dbGen:"column:Type" db:"Type"`
-	Data  string `dbGen:"column:Data" db:"Data"`
+	Id     string `dbGen:"column:Id;Pk:1" db:"Id"`
+	SiteId string `dbGen:"column:SiteId" db:"SiteId"`
+	State  string `dbGen:"column:State" db:"State"`
+	Type   string `dbGen:"column:Type" db:"Type"`
+	Data   string `dbGen:"column:Data" db:"Data"`
 	AuditFields
 }
 
@@ -26,11 +27,11 @@ func (Asset) TableName() string {
 }
 
 func (asset Asset) FileName() string {
-	panic("not implemented")
+	return "not implemented"
 }
 
 func (asset Asset) Extension() string {
-	panic("not implemented")
+	return "not implemented"
 }
 
 type AuditFields struct {
@@ -41,9 +42,10 @@ type AuditFields struct {
 }
 
 type Group struct {
-	Id   string     `dbGen:"column:Id;Pk:1" db:"Id"`
-	Name string     `dbGen:"column:Name" db:"Name"`
-	Data JSONObject `dbGen:"column:Data" db:"Data"`
+	Id     string     `dbGen:"column:Id;Pk:1" db:"Id"`
+	SiteId string     `dbGen:"column:SiteId" db:"SiteId"`
+	Name   string     `dbGen:"column:Name" db:"Name"`
+	Data   JSONObject `dbGen:"column:Data" db:"Data"`
 	AuditFields
 }
 
@@ -52,8 +54,10 @@ func (Group) TableName() string {
 }
 
 type Item struct {
-	Id   string     `dbGen:"column:Id;Pk:1" db:"Id"`
-	Data JSONObject `dbGen:"column:Data" db:"Data"`
+	Id     string     `dbGen:"column:Id;Pk:1" db:"Id"`
+	Type   string     `dbGen:"column:Type" db:"Type"`
+	SiteId string     `dbGen:"column:SiteId" db:"SiteId"`
+	Data   JSONObject `dbGen:"column:Data" db:"Data"`
 	AuditFields
 }
 

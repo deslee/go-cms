@@ -49,17 +49,15 @@ func generate(modelTypes ...interface{}) {
 }
 
 func generateRepositoryMethods(model Model, f *File) {
-	writeUpsertFunctionsForModel(model, f)
-
-	// create a slice of fields that are keys
+	writeQueryFunctionsForModel(model, f)
 	writeGetterFunctionsForModel(model, model.primaryKeyFields(), f)
-
 	for _, field := range model.Fields {
 		if field.needsGetter() {
 			writeGetterFunctionsForModel(model, []Field{field}, f)
 		}
 	}
-	writeQueryFunctionsForModel(model, f)
+	writeUpsertFunctionsForModel(model, f)
+	writeDeleteFunctionsForModel(model, model.primaryKeyFields(), f)
 
 	f.Line()
 }
@@ -94,6 +92,76 @@ func writeQueryFunctionsForModel(model Model, f *File) {
 	)
 }
 
+func writeDeleteFunctionsForModel(model Model, fieldsToQueryOn []Field, f *File) {
+	writeDeleteFunctionsForModelForCtxCreator(model, fieldsToQueryOn, "DB", f)
+	writeDeleteFunctionsForModelForCtxCreator(model, fieldsToQueryOn, "Tx", f)
+}
+
+func writeDeleteFunctionsForModelForCtxCreator(model Model, fieldsToQueryOn []Field, ctxCreator string, f *File) {
+	// create params of the delete method
+	params := []Code{
+		Id("ctx").Qual("context", "Context"),
+		Id(strings.ToLower(ctxCreator)).Add(Op("*")).Qual("github.com/jmoiron/sqlx", ctxCreator),
+	}
+
+	// begin creating delete query
+	deleteQuery := fmt.Sprintf("DELETE FROM %s WHERE ", model.TableName)
+
+	// append the keys as arguments
+	// append the keys as query params
+	for idx, keyField := range fieldsToQueryOn {
+		params = append(params, Id(fmt.Sprintf("key%s", keyField.FieldName)).Id("string"))
+		if idx == 0 {
+			deleteQuery += fmt.Sprintf("%s=?", keyField.FieldName)
+		} else {
+			deleteQuery += fmt.Sprintf(" AND %s=?", keyField.FieldName)
+		}
+	}
+
+	// create the arguments code block for the actual db call
+	dbExecArguments := []Code{
+		Lit(deleteQuery),
+	}
+
+	methodNameEnding := ""
+
+	// append the keys as sql parameterized arguments
+	for idx, keyField := range fieldsToQueryOn {
+		dbExecArguments = append(dbExecArguments, Id(fmt.Sprintf("key%s", keyField.FieldName)))
+		if idx == 0 {
+			methodNameEnding += keyField.FieldName
+		} else {
+			methodNameEnding += fmt.Sprintf("And%s", keyField.FieldName)
+		}
+	}
+
+	functionName := fmt.Sprintf("Delete%sBy%s", model.StructName, methodNameEnding)
+
+	if ctxCreator == "DB" {
+
+	} else if ctxCreator == "Tx" {
+		functionName += "Tx"
+	} else {
+		panic(fmt.Sprintf("Unrecognized argument to writeUpsertMethodForModelForCtxCreator %s", ctxCreator))
+	}
+
+	f.Line()
+
+	f.Func().Id(functionName).Params(
+		params...,
+	).Params(Error()).Block(
+		List(Id("_"), Id("err")).Op(":=").Id(fmt.Sprintf("%s.Exec", strings.ToLower(ctxCreator))).Call(
+			dbExecArguments...,
+		),
+		Line(),
+		If(Id("err").Op("!=").Id("nil")).Block(
+			Return(Id("err")),
+		),
+		Line(),
+		Return(Id("nil")),
+	)
+}
+
 func writeGetterFunctionsForModel(model Model, fieldsToQueryOn []Field, f *File) {
 	f.Line()
 
@@ -113,7 +181,7 @@ func writeGetterFunctionsForModel(model Model, fieldsToQueryOn []Field, f *File)
 		if idx == 0 {
 			selectQuery += fmt.Sprintf("%s=?", keyField.FieldName)
 		} else {
-			selectQuery += fmt.Sprintf("AND %s=?", keyField.FieldName)
+			selectQuery += fmt.Sprintf(" AND %s=?", keyField.FieldName)
 		}
 	}
 
@@ -132,7 +200,6 @@ func writeGetterFunctionsForModel(model Model, fieldsToQueryOn []Field, f *File)
 		} else {
 			methodNameEnding += fmt.Sprintf("And%s", keyField.FieldName)
 		}
-
 	}
 
 	f.Func().Id(fmt.Sprintf("Find%sBy%s", model.StructName, methodNameEnding)).Params(
@@ -156,12 +223,12 @@ func writeGetterFunctionsForModel(model Model, fieldsToQueryOn []Field, f *File)
 }
 
 func writeUpsertFunctionsForModel(model Model, f *File) {
-	writeUpsertMethodForModelForType(model, f, "DB")
+	writeUpsertMethodForModelForCtxCreator(model, f, "DB")
 	f.Line()
-	writeUpsertMethodForModelForType(model, f, "Tx")
+	writeUpsertMethodForModelForCtxCreator(model, f, "Tx")
 }
 
-func writeUpsertMethodForModelForType(model Model, f *File, ctxCreator string) {
+func writeUpsertMethodForModelForCtxCreator(model Model, f *File, ctxCreator string) {
 	var functionName = fmt.Sprintf("Upsert%s", model.StructName)
 
 	if ctxCreator == "DB" {
@@ -169,7 +236,7 @@ func writeUpsertMethodForModelForType(model Model, f *File, ctxCreator string) {
 	} else if ctxCreator == "Tx" {
 		functionName += "Tx"
 	} else {
-		panic(fmt.Sprintf("Unrecognized argument to writeUpsertMethodForModelForType %s", ctxCreator))
+		panic(fmt.Sprintf("Unrecognized argument to writeUpsertMethodForModelForCtxCreator %s", ctxCreator))
 	}
 
 	// generate upsert sql

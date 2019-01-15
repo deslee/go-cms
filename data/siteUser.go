@@ -13,12 +13,12 @@ func MutationAddUserToSite(ctx context.Context, db *sqlx.DB, userId string, site
 		UserId:      userId,
 		SiteId:      siteId,
 		Order:       0,
-		AuditFields: CreateAuditFields(ctx, nil),
+		AuditFields: CreateAuditFields(ctx),
 	}
 
 	err := repository.UpsertSiteUser(ctx, db, siteUser)
 	if err != nil {
-		return GenericUnexpectedError(err), nil
+		return UnexpectedErrorGenericResult(err), nil
 	}
 
 	return GenericSuccess(), nil

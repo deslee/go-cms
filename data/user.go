@@ -44,13 +44,6 @@ type UserResult struct {
 	Data *User `json:"data"`
 }
 
-func UnexpectedErrorUserResult(err error) UserResult {
-	return UserResult{GenericResult: GenericErrorMessage(fmt.Sprintf("Unexpected error %s", err))}
-}
-func UnexpectedLoginErrorResult(err error) LoginResult {
-	return LoginResult{GenericResult: GenericErrorMessage(fmt.Sprintf("Unexpected error %s", err))}
-}
-
 func UserIdFromContext(ctx context.Context) string {
 	// try to get the user id from the context
 	userId, ok := ctx.Value(UserContextKey("sub")).(string)
@@ -87,13 +80,13 @@ func MutationUpdateUser(ctx context.Context, db *sqlx.DB, user UserInput) (UserR
 		return UnexpectedErrorUserResult(err), nil
 	}
 	if existingUser == nil {
-		return UserResult{GenericResult: GenericErrorMessage(fmt.Sprintf("User %s not found", user.Email))}, nil
+		return UserResult{GenericResult: ErrorGenericResult(fmt.Sprintf("User %s not found", user.Email))}, nil
 	}
 
 	// make sure the current user is the user
 	currentUserId := UserIdFromContext(ctx)
 	if currentUserId != existingUser.Id {
-		return UserResult{GenericResult: GenericErrorMessage(fmt.Sprintf("You do not have authorization to update %s", user.Email))}, nil
+		return UserResult{GenericResult: ErrorGenericResult(fmt.Sprintf("You do not have authorization to update %s", user.Email))}, nil
 	}
 
 	// return the result
@@ -109,7 +102,7 @@ func MutationRegister(ctx context.Context, db *sqlx.DB, registration RegisterInp
 		return UnexpectedErrorUserResult(err), nil
 	}
 	if existingUser != nil {
-		return UserResult{GenericResult: GenericErrorMessage(fmt.Sprintf("User %s already exists", registration.Email))}, nil
+		return UserResult{GenericResult: ErrorGenericResult(fmt.Sprintf("User %s already exists", registration.Email))}, nil
 	}
 
 	// generate the salt
@@ -128,7 +121,7 @@ func MutationRegister(ctx context.Context, db *sqlx.DB, registration RegisterInp
 		Password:    registration.Password,
 		Salt:        string(hash),
 		Data:        registration.Data,
-		AuditFields: CreateAuditFields(ctx, nil),
+		AuditFields: CreateAuditFields(ctx),
 	}
 
 	// insert the user into the table
@@ -153,20 +146,16 @@ func Login(ctx context.Context, db *sqlx.DB, login LoginInput) (LoginResult, err
 	// get the user from the database, make sure it's not nil
 	user, err := repository.FindUserByEmail(ctx, db, login.Email)
 	if err != nil {
-		return UnexpectedLoginErrorResult(err), nil
+		return UnexpectedErrorLoginResult(err), nil
 	}
 	if user == nil {
-		return LoginResult{
-			GenericResult: GenericErrorMessage("Failed to login"),
-		}, nil
+		return UnexpectedErrorLoginResult(err), nil
 	}
 
 	// check the password
 	err = bcrypt.CompareHashAndPassword([]byte(user.Salt), []byte(user.Password))
 	if err != nil {
-		return LoginResult{
-			GenericResult: GenericErrorMessage("Failed to login"),
-		}, nil
+		return UnexpectedErrorLoginResult(err), nil
 	}
 
 	// generate a token and respond
@@ -226,7 +215,7 @@ func generateToken(user User) string {
 /**
 Returns true if user has access to the site, otherwise false
 */
-func assertUserHasAccessToSite(ctx context.Context, db *sqlx.DB, siteId string) (bool, error) {
+func assertContextUserHasAccessToSite(ctx context.Context, db *sqlx.DB, siteId string) (bool, error) {
 	userId := UserIdFromContext(ctx)
 	if len(userId) == 0 {
 		return false, nil

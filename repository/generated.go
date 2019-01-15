@@ -9,32 +9,22 @@ import (
 	sqlx "github.com/jmoiron/sqlx"
 )
 
-func UpsertUser(ctx context.Context, db *sqlx.DB, obj model.User) error {
-	stmt, err := db.PrepareNamedContext(ctx, "INSERT INTO Users VALUES (:Id,:Email,:Password,:Salt,:Data,:CreatedAt,:CreatedBy,:LastUpdatedAt,:LastUpdatedBy) ON CONFLICT(Id) DO UPDATE SET `Id`=excluded.`Id`,`Email`=excluded.`Email`,`Password`=excluded.`Password`,`Salt`=excluded.`Salt`,`Data`=excluded.`Data`,`CreatedAt`=excluded.`CreatedAt`,`CreatedBy`=excluded.`CreatedBy`,`LastUpdatedAt`=excluded.`LastUpdatedAt`,`LastUpdatedBy`=excluded.`LastUpdatedBy`")
+func ScanUserList(ctx context.Context, db *sqlx.DB, query string, args ...interface{}) ([]model.User, error) {
+	var list []model.User
+	rows, err := db.Queryx(query, args...)
 	if err != nil {
-		return err
+		return nil, err
 	}
-
-	_, err = stmt.Exec(obj)
-	if err != nil {
-		return err
+	defer rows.Close()
+	for rows.Next() {
+		var obj model.User
+		err = rows.StructScan(&obj)
+		if err != nil {
+			return nil, err
+		}
+		list = append(list, obj)
 	}
-
-	return err
-}
-
-func UpsertUserTx(ctx context.Context, tx *sqlx.Tx, obj model.User) error {
-	stmt, err := tx.PrepareNamedContext(ctx, "INSERT INTO Users VALUES (:Id,:Email,:Password,:Salt,:Data,:CreatedAt,:CreatedBy,:LastUpdatedAt,:LastUpdatedBy) ON CONFLICT(Id) DO UPDATE SET `Id`=excluded.`Id`,`Email`=excluded.`Email`,`Password`=excluded.`Password`,`Salt`=excluded.`Salt`,`Data`=excluded.`Data`,`CreatedAt`=excluded.`CreatedAt`,`CreatedBy`=excluded.`CreatedBy`,`LastUpdatedAt`=excluded.`LastUpdatedAt`,`LastUpdatedBy`=excluded.`LastUpdatedBy`")
-	if err != nil {
-		return err
-	}
-
-	_, err = stmt.Exec(obj)
-	if err != nil {
-		return err
-	}
-
-	return err
+	return list, nil
 }
 
 func FindUserById(ctx context.Context, db *sqlx.DB, keyId string) (*model.User, error) {
@@ -66,16 +56,63 @@ func FindUserByEmail(ctx context.Context, db *sqlx.DB, keyEmail string) (*model.
 
 	return &obj, nil
 }
+func UpsertUser(ctx context.Context, db *sqlx.DB, obj model.User) error {
+	stmt, err := db.PrepareNamedContext(ctx, "INSERT INTO Users VALUES (:Id,:Email,:Password,:Salt,:Data,:CreatedAt,:CreatedBy,:LastUpdatedAt,:LastUpdatedBy) ON CONFLICT(Id) DO UPDATE SET `Id`=excluded.`Id`,`Email`=excluded.`Email`,`Password`=excluded.`Password`,`Salt`=excluded.`Salt`,`Data`=excluded.`Data`,`CreatedAt`=excluded.`CreatedAt`,`CreatedBy`=excluded.`CreatedBy`,`LastUpdatedAt`=excluded.`LastUpdatedAt`,`LastUpdatedBy`=excluded.`LastUpdatedBy`")
+	if err != nil {
+		return err
+	}
 
-func ScanUserList(ctx context.Context, db *sqlx.DB, query string, args ...interface{}) ([]model.User, error) {
-	var list []model.User
+	_, err = stmt.Exec(obj)
+	if err != nil {
+		return err
+	}
+
+	return err
+}
+
+func UpsertUserTx(ctx context.Context, tx *sqlx.Tx, obj model.User) error {
+	stmt, err := tx.PrepareNamedContext(ctx, "INSERT INTO Users VALUES (:Id,:Email,:Password,:Salt,:Data,:CreatedAt,:CreatedBy,:LastUpdatedAt,:LastUpdatedBy) ON CONFLICT(Id) DO UPDATE SET `Id`=excluded.`Id`,`Email`=excluded.`Email`,`Password`=excluded.`Password`,`Salt`=excluded.`Salt`,`Data`=excluded.`Data`,`CreatedAt`=excluded.`CreatedAt`,`CreatedBy`=excluded.`CreatedBy`,`LastUpdatedAt`=excluded.`LastUpdatedAt`,`LastUpdatedBy`=excluded.`LastUpdatedBy`")
+	if err != nil {
+		return err
+	}
+
+	_, err = stmt.Exec(obj)
+	if err != nil {
+		return err
+	}
+
+	return err
+}
+
+func DeleteUserById(ctx context.Context, db *sqlx.DB, keyId string) error {
+	_, err := db.Exec("DELETE FROM Users WHERE Id=?", keyId)
+
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func DeleteUserByIdTx(ctx context.Context, tx *sqlx.Tx, keyId string) error {
+	_, err := tx.Exec("DELETE FROM Users WHERE Id=?", keyId)
+
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func ScanSiteList(ctx context.Context, db *sqlx.DB, query string, args ...interface{}) ([]model.Site, error) {
+	var list []model.Site
 	rows, err := db.Queryx(query, args...)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
 	for rows.Next() {
-		var obj model.User
+		var obj model.Site
 		err = rows.StructScan(&obj)
 		if err != nil {
 			return nil, err
@@ -85,6 +122,20 @@ func ScanUserList(ctx context.Context, db *sqlx.DB, query string, args ...interf
 	return list, nil
 }
 
+func FindSiteById(ctx context.Context, db *sqlx.DB, keyId string) (*model.Site, error) {
+	obj := model.Site{}
+
+	err := db.QueryRowx("SELECT * FROM Sites WHERE Id=?", keyId).StructScan(&obj)
+
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, nil
+		}
+		return nil, err
+	}
+
+	return &obj, nil
+}
 func UpsertSite(ctx context.Context, db *sqlx.DB, obj model.Site) error {
 	stmt, err := db.PrepareNamedContext(ctx, "INSERT INTO Sites VALUES (:Id,:Name,:Data,:CreatedAt,:CreatedBy,:LastUpdatedAt,:LastUpdatedBy) ON CONFLICT(Id) DO UPDATE SET `Id`=excluded.`Id`,`Name`=excluded.`Name`,`Data`=excluded.`Data`,`CreatedAt`=excluded.`CreatedAt`,`CreatedBy`=excluded.`CreatedBy`,`LastUpdatedAt`=excluded.`LastUpdatedAt`,`LastUpdatedBy`=excluded.`LastUpdatedBy`")
 	if err != nil {
@@ -113,80 +164,24 @@ func UpsertSiteTx(ctx context.Context, tx *sqlx.Tx, obj model.Site) error {
 	return err
 }
 
-func FindSiteById(ctx context.Context, db *sqlx.DB, keyId string) (*model.Site, error) {
-	obj := model.Site{}
+func DeleteSiteById(ctx context.Context, db *sqlx.DB, keyId string) error {
+	_, err := db.Exec("DELETE FROM Sites WHERE Id=?", keyId)
 
-	err := db.QueryRowx("SELECT * FROM Sites WHERE Id=?", keyId).StructScan(&obj)
-
-	if err != nil {
-		if err == sql.ErrNoRows {
-			return nil, nil
-		}
-		return nil, err
-	}
-
-	return &obj, nil
-}
-
-func ScanSiteList(ctx context.Context, db *sqlx.DB, query string, args ...interface{}) ([]model.Site, error) {
-	var list []model.Site
-	rows, err := db.Queryx(query, args...)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	for rows.Next() {
-		var obj model.Site
-		err = rows.StructScan(&obj)
-		if err != nil {
-			return nil, err
-		}
-		list = append(list, obj)
-	}
-	return list, nil
-}
-
-func UpsertItem(ctx context.Context, db *sqlx.DB, obj model.Item) error {
-	stmt, err := db.PrepareNamedContext(ctx, "INSERT INTO Items VALUES (:Id,:Data,:CreatedAt,:CreatedBy,:LastUpdatedAt,:LastUpdatedBy) ON CONFLICT(Id) DO UPDATE SET `Id`=excluded.`Id`,`Data`=excluded.`Data`,`CreatedAt`=excluded.`CreatedAt`,`CreatedBy`=excluded.`CreatedBy`,`LastUpdatedAt`=excluded.`LastUpdatedAt`,`LastUpdatedBy`=excluded.`LastUpdatedBy`")
 	if err != nil {
 		return err
 	}
 
-	_, err = stmt.Exec(obj)
-	if err != nil {
-		return err
-	}
-
-	return err
+	return nil
 }
 
-func UpsertItemTx(ctx context.Context, tx *sqlx.Tx, obj model.Item) error {
-	stmt, err := tx.PrepareNamedContext(ctx, "INSERT INTO Items VALUES (:Id,:Data,:CreatedAt,:CreatedBy,:LastUpdatedAt,:LastUpdatedBy) ON CONFLICT(Id) DO UPDATE SET `Id`=excluded.`Id`,`Data`=excluded.`Data`,`CreatedAt`=excluded.`CreatedAt`,`CreatedBy`=excluded.`CreatedBy`,`LastUpdatedAt`=excluded.`LastUpdatedAt`,`LastUpdatedBy`=excluded.`LastUpdatedBy`")
+func DeleteSiteByIdTx(ctx context.Context, tx *sqlx.Tx, keyId string) error {
+	_, err := tx.Exec("DELETE FROM Sites WHERE Id=?", keyId)
+
 	if err != nil {
 		return err
 	}
 
-	_, err = stmt.Exec(obj)
-	if err != nil {
-		return err
-	}
-
-	return err
-}
-
-func FindItemById(ctx context.Context, db *sqlx.DB, keyId string) (*model.Item, error) {
-	obj := model.Item{}
-
-	err := db.QueryRowx("SELECT * FROM Items WHERE Id=?", keyId).StructScan(&obj)
-
-	if err != nil {
-		if err == sql.ErrNoRows {
-			return nil, nil
-		}
-		return nil, err
-	}
-
-	return &obj, nil
+	return nil
 }
 
 func ScanItemList(ctx context.Context, db *sqlx.DB, query string, args ...interface{}) ([]model.Item, error) {
@@ -207,38 +202,10 @@ func ScanItemList(ctx context.Context, db *sqlx.DB, query string, args ...interf
 	return list, nil
 }
 
-func UpsertGroup(ctx context.Context, db *sqlx.DB, obj model.Group) error {
-	stmt, err := db.PrepareNamedContext(ctx, "INSERT INTO Groups VALUES (:Id,:Name,:Data,:CreatedAt,:CreatedBy,:LastUpdatedAt,:LastUpdatedBy) ON CONFLICT(Id) DO UPDATE SET `Id`=excluded.`Id`,`Name`=excluded.`Name`,`Data`=excluded.`Data`,`CreatedAt`=excluded.`CreatedAt`,`CreatedBy`=excluded.`CreatedBy`,`LastUpdatedAt`=excluded.`LastUpdatedAt`,`LastUpdatedBy`=excluded.`LastUpdatedBy`")
-	if err != nil {
-		return err
-	}
+func FindItemById(ctx context.Context, db *sqlx.DB, keyId string) (*model.Item, error) {
+	obj := model.Item{}
 
-	_, err = stmt.Exec(obj)
-	if err != nil {
-		return err
-	}
-
-	return err
-}
-
-func UpsertGroupTx(ctx context.Context, tx *sqlx.Tx, obj model.Group) error {
-	stmt, err := tx.PrepareNamedContext(ctx, "INSERT INTO Groups VALUES (:Id,:Name,:Data,:CreatedAt,:CreatedBy,:LastUpdatedAt,:LastUpdatedBy) ON CONFLICT(Id) DO UPDATE SET `Id`=excluded.`Id`,`Name`=excluded.`Name`,`Data`=excluded.`Data`,`CreatedAt`=excluded.`CreatedAt`,`CreatedBy`=excluded.`CreatedBy`,`LastUpdatedAt`=excluded.`LastUpdatedAt`,`LastUpdatedBy`=excluded.`LastUpdatedBy`")
-	if err != nil {
-		return err
-	}
-
-	_, err = stmt.Exec(obj)
-	if err != nil {
-		return err
-	}
-
-	return err
-}
-
-func FindGroupById(ctx context.Context, db *sqlx.DB, keyId string) (*model.Group, error) {
-	obj := model.Group{}
-
-	err := db.QueryRowx("SELECT * FROM Groups WHERE Id=?", keyId).StructScan(&obj)
+	err := db.QueryRowx("SELECT * FROM Items WHERE Id=?", keyId).StructScan(&obj)
 
 	if err != nil {
 		if err == sql.ErrNoRows {
@@ -248,6 +215,53 @@ func FindGroupById(ctx context.Context, db *sqlx.DB, keyId string) (*model.Group
 	}
 
 	return &obj, nil
+}
+func UpsertItem(ctx context.Context, db *sqlx.DB, obj model.Item) error {
+	stmt, err := db.PrepareNamedContext(ctx, "INSERT INTO Items VALUES (:Id,:Type,:SiteId,:Data,:CreatedAt,:CreatedBy,:LastUpdatedAt,:LastUpdatedBy) ON CONFLICT(Id) DO UPDATE SET `Id`=excluded.`Id`,`Type`=excluded.`Type`,`SiteId`=excluded.`SiteId`,`Data`=excluded.`Data`,`CreatedAt`=excluded.`CreatedAt`,`CreatedBy`=excluded.`CreatedBy`,`LastUpdatedAt`=excluded.`LastUpdatedAt`,`LastUpdatedBy`=excluded.`LastUpdatedBy`")
+	if err != nil {
+		return err
+	}
+
+	_, err = stmt.Exec(obj)
+	if err != nil {
+		return err
+	}
+
+	return err
+}
+
+func UpsertItemTx(ctx context.Context, tx *sqlx.Tx, obj model.Item) error {
+	stmt, err := tx.PrepareNamedContext(ctx, "INSERT INTO Items VALUES (:Id,:Type,:SiteId,:Data,:CreatedAt,:CreatedBy,:LastUpdatedAt,:LastUpdatedBy) ON CONFLICT(Id) DO UPDATE SET `Id`=excluded.`Id`,`Type`=excluded.`Type`,`SiteId`=excluded.`SiteId`,`Data`=excluded.`Data`,`CreatedAt`=excluded.`CreatedAt`,`CreatedBy`=excluded.`CreatedBy`,`LastUpdatedAt`=excluded.`LastUpdatedAt`,`LastUpdatedBy`=excluded.`LastUpdatedBy`")
+	if err != nil {
+		return err
+	}
+
+	_, err = stmt.Exec(obj)
+	if err != nil {
+		return err
+	}
+
+	return err
+}
+
+func DeleteItemById(ctx context.Context, db *sqlx.DB, keyId string) error {
+	_, err := db.Exec("DELETE FROM Items WHERE Id=?", keyId)
+
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func DeleteItemByIdTx(ctx context.Context, tx *sqlx.Tx, keyId string) error {
+	_, err := tx.Exec("DELETE FROM Items WHERE Id=?", keyId)
+
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func ScanGroupList(ctx context.Context, db *sqlx.DB, query string, args ...interface{}) ([]model.Group, error) {
@@ -268,38 +282,10 @@ func ScanGroupList(ctx context.Context, db *sqlx.DB, query string, args ...inter
 	return list, nil
 }
 
-func UpsertAsset(ctx context.Context, db *sqlx.DB, obj model.Asset) error {
-	stmt, err := db.PrepareNamedContext(ctx, "INSERT INTO Assets VALUES (:Id,:State,:Type,:Data,:CreatedAt,:CreatedBy,:LastUpdatedAt,:LastUpdatedBy) ON CONFLICT(Id) DO UPDATE SET `Id`=excluded.`Id`,`State`=excluded.`State`,`Type`=excluded.`Type`,`Data`=excluded.`Data`,`CreatedAt`=excluded.`CreatedAt`,`CreatedBy`=excluded.`CreatedBy`,`LastUpdatedAt`=excluded.`LastUpdatedAt`,`LastUpdatedBy`=excluded.`LastUpdatedBy`")
-	if err != nil {
-		return err
-	}
+func FindGroupById(ctx context.Context, db *sqlx.DB, keyId string) (*model.Group, error) {
+	obj := model.Group{}
 
-	_, err = stmt.Exec(obj)
-	if err != nil {
-		return err
-	}
-
-	return err
-}
-
-func UpsertAssetTx(ctx context.Context, tx *sqlx.Tx, obj model.Asset) error {
-	stmt, err := tx.PrepareNamedContext(ctx, "INSERT INTO Assets VALUES (:Id,:State,:Type,:Data,:CreatedAt,:CreatedBy,:LastUpdatedAt,:LastUpdatedBy) ON CONFLICT(Id) DO UPDATE SET `Id`=excluded.`Id`,`State`=excluded.`State`,`Type`=excluded.`Type`,`Data`=excluded.`Data`,`CreatedAt`=excluded.`CreatedAt`,`CreatedBy`=excluded.`CreatedBy`,`LastUpdatedAt`=excluded.`LastUpdatedAt`,`LastUpdatedBy`=excluded.`LastUpdatedBy`")
-	if err != nil {
-		return err
-	}
-
-	_, err = stmt.Exec(obj)
-	if err != nil {
-		return err
-	}
-
-	return err
-}
-
-func FindAssetById(ctx context.Context, db *sqlx.DB, keyId string) (*model.Asset, error) {
-	obj := model.Asset{}
-
-	err := db.QueryRowx("SELECT * FROM Assets WHERE Id=?", keyId).StructScan(&obj)
+	err := db.QueryRowx("SELECT * FROM Groups WHERE Id=?", keyId).StructScan(&obj)
 
 	if err != nil {
 		if err == sql.ErrNoRows {
@@ -309,6 +295,53 @@ func FindAssetById(ctx context.Context, db *sqlx.DB, keyId string) (*model.Asset
 	}
 
 	return &obj, nil
+}
+func UpsertGroup(ctx context.Context, db *sqlx.DB, obj model.Group) error {
+	stmt, err := db.PrepareNamedContext(ctx, "INSERT INTO Groups VALUES (:Id,:SiteId,:Name,:Data,:CreatedAt,:CreatedBy,:LastUpdatedAt,:LastUpdatedBy) ON CONFLICT(Id) DO UPDATE SET `Id`=excluded.`Id`,`SiteId`=excluded.`SiteId`,`Name`=excluded.`Name`,`Data`=excluded.`Data`,`CreatedAt`=excluded.`CreatedAt`,`CreatedBy`=excluded.`CreatedBy`,`LastUpdatedAt`=excluded.`LastUpdatedAt`,`LastUpdatedBy`=excluded.`LastUpdatedBy`")
+	if err != nil {
+		return err
+	}
+
+	_, err = stmt.Exec(obj)
+	if err != nil {
+		return err
+	}
+
+	return err
+}
+
+func UpsertGroupTx(ctx context.Context, tx *sqlx.Tx, obj model.Group) error {
+	stmt, err := tx.PrepareNamedContext(ctx, "INSERT INTO Groups VALUES (:Id,:SiteId,:Name,:Data,:CreatedAt,:CreatedBy,:LastUpdatedAt,:LastUpdatedBy) ON CONFLICT(Id) DO UPDATE SET `Id`=excluded.`Id`,`SiteId`=excluded.`SiteId`,`Name`=excluded.`Name`,`Data`=excluded.`Data`,`CreatedAt`=excluded.`CreatedAt`,`CreatedBy`=excluded.`CreatedBy`,`LastUpdatedAt`=excluded.`LastUpdatedAt`,`LastUpdatedBy`=excluded.`LastUpdatedBy`")
+	if err != nil {
+		return err
+	}
+
+	_, err = stmt.Exec(obj)
+	if err != nil {
+		return err
+	}
+
+	return err
+}
+
+func DeleteGroupById(ctx context.Context, db *sqlx.DB, keyId string) error {
+	_, err := db.Exec("DELETE FROM Groups WHERE Id=?", keyId)
+
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func DeleteGroupByIdTx(ctx context.Context, tx *sqlx.Tx, keyId string) error {
+	_, err := tx.Exec("DELETE FROM Groups WHERE Id=?", keyId)
+
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func ScanAssetList(ctx context.Context, db *sqlx.DB, query string, args ...interface{}) ([]model.Asset, error) {
@@ -329,6 +362,100 @@ func ScanAssetList(ctx context.Context, db *sqlx.DB, query string, args ...inter
 	return list, nil
 }
 
+func FindAssetById(ctx context.Context, db *sqlx.DB, keyId string) (*model.Asset, error) {
+	obj := model.Asset{}
+
+	err := db.QueryRowx("SELECT * FROM Assets WHERE Id=?", keyId).StructScan(&obj)
+
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, nil
+		}
+		return nil, err
+	}
+
+	return &obj, nil
+}
+func UpsertAsset(ctx context.Context, db *sqlx.DB, obj model.Asset) error {
+	stmt, err := db.PrepareNamedContext(ctx, "INSERT INTO Assets VALUES (:Id,:SiteId,:State,:Type,:Data,:CreatedAt,:CreatedBy,:LastUpdatedAt,:LastUpdatedBy) ON CONFLICT(Id) DO UPDATE SET `Id`=excluded.`Id`,`SiteId`=excluded.`SiteId`,`State`=excluded.`State`,`Type`=excluded.`Type`,`Data`=excluded.`Data`,`CreatedAt`=excluded.`CreatedAt`,`CreatedBy`=excluded.`CreatedBy`,`LastUpdatedAt`=excluded.`LastUpdatedAt`,`LastUpdatedBy`=excluded.`LastUpdatedBy`")
+	if err != nil {
+		return err
+	}
+
+	_, err = stmt.Exec(obj)
+	if err != nil {
+		return err
+	}
+
+	return err
+}
+
+func UpsertAssetTx(ctx context.Context, tx *sqlx.Tx, obj model.Asset) error {
+	stmt, err := tx.PrepareNamedContext(ctx, "INSERT INTO Assets VALUES (:Id,:SiteId,:State,:Type,:Data,:CreatedAt,:CreatedBy,:LastUpdatedAt,:LastUpdatedBy) ON CONFLICT(Id) DO UPDATE SET `Id`=excluded.`Id`,`SiteId`=excluded.`SiteId`,`State`=excluded.`State`,`Type`=excluded.`Type`,`Data`=excluded.`Data`,`CreatedAt`=excluded.`CreatedAt`,`CreatedBy`=excluded.`CreatedBy`,`LastUpdatedAt`=excluded.`LastUpdatedAt`,`LastUpdatedBy`=excluded.`LastUpdatedBy`")
+	if err != nil {
+		return err
+	}
+
+	_, err = stmt.Exec(obj)
+	if err != nil {
+		return err
+	}
+
+	return err
+}
+
+func DeleteAssetById(ctx context.Context, db *sqlx.DB, keyId string) error {
+	_, err := db.Exec("DELETE FROM Assets WHERE Id=?", keyId)
+
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func DeleteAssetByIdTx(ctx context.Context, tx *sqlx.Tx, keyId string) error {
+	_, err := tx.Exec("DELETE FROM Assets WHERE Id=?", keyId)
+
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func ScanSiteUserList(ctx context.Context, db *sqlx.DB, query string, args ...interface{}) ([]model.SiteUser, error) {
+	var list []model.SiteUser
+	rows, err := db.Queryx(query, args...)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	for rows.Next() {
+		var obj model.SiteUser
+		err = rows.StructScan(&obj)
+		if err != nil {
+			return nil, err
+		}
+		list = append(list, obj)
+	}
+	return list, nil
+}
+
+func FindSiteUserByUserIdAndSiteId(ctx context.Context, db *sqlx.DB, keyUserId string, keySiteId string) (*model.SiteUser, error) {
+	obj := model.SiteUser{}
+
+	err := db.QueryRowx("SELECT * FROM SiteUsers WHERE UserId=? AND SiteId=?", keyUserId, keySiteId).StructScan(&obj)
+
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, nil
+		}
+		return nil, err
+	}
+
+	return &obj, nil
+}
 func UpsertSiteUser(ctx context.Context, db *sqlx.DB, obj model.SiteUser) error {
 	stmt, err := db.PrepareNamedContext(ctx, "INSERT INTO SiteUsers VALUES (:UserId,:SiteId,:Order,:CreatedAt,:CreatedBy,:LastUpdatedAt,:LastUpdatedBy) ON CONFLICT(UserId,SiteId) DO UPDATE SET `UserId`=excluded.`UserId`,`SiteId`=excluded.`SiteId`,`Order`=excluded.`Order`,`CreatedAt`=excluded.`CreatedAt`,`CreatedBy`=excluded.`CreatedBy`,`LastUpdatedAt`=excluded.`LastUpdatedAt`,`LastUpdatedBy`=excluded.`LastUpdatedBy`")
 	if err != nil {
@@ -357,10 +484,48 @@ func UpsertSiteUserTx(ctx context.Context, tx *sqlx.Tx, obj model.SiteUser) erro
 	return err
 }
 
-func FindSiteUserByUserIdAndSiteId(ctx context.Context, db *sqlx.DB, keyUserId string, keySiteId string) (*model.SiteUser, error) {
-	obj := model.SiteUser{}
+func DeleteSiteUserByUserIdAndSiteId(ctx context.Context, db *sqlx.DB, keyUserId string, keySiteId string) error {
+	_, err := db.Exec("DELETE FROM SiteUsers WHERE UserId=? AND SiteId=?", keyUserId, keySiteId)
 
-	err := db.QueryRowx("SELECT * FROM SiteUsers WHERE UserId=?AND SiteId=?", keyUserId, keySiteId).StructScan(&obj)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func DeleteSiteUserByUserIdAndSiteIdTx(ctx context.Context, tx *sqlx.Tx, keyUserId string, keySiteId string) error {
+	_, err := tx.Exec("DELETE FROM SiteUsers WHERE UserId=? AND SiteId=?", keyUserId, keySiteId)
+
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func ScanItemGroupList(ctx context.Context, db *sqlx.DB, query string, args ...interface{}) ([]model.ItemGroup, error) {
+	var list []model.ItemGroup
+	rows, err := db.Queryx(query, args...)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	for rows.Next() {
+		var obj model.ItemGroup
+		err = rows.StructScan(&obj)
+		if err != nil {
+			return nil, err
+		}
+		list = append(list, obj)
+	}
+	return list, nil
+}
+
+func FindItemGroupByItemIdAndGroupId(ctx context.Context, db *sqlx.DB, keyItemId string, keyGroupId string) (*model.ItemGroup, error) {
+	obj := model.ItemGroup{}
+
+	err := db.QueryRowx("SELECT * FROM ItemGroups WHERE ItemId=? AND GroupId=?", keyItemId, keyGroupId).StructScan(&obj)
 
 	if err != nil {
 		if err == sql.ErrNoRows {
@@ -371,25 +536,6 @@ func FindSiteUserByUserIdAndSiteId(ctx context.Context, db *sqlx.DB, keyUserId s
 
 	return &obj, nil
 }
-
-func ScanSiteUserList(ctx context.Context, db *sqlx.DB, query string, args ...interface{}) ([]model.SiteUser, error) {
-	var list []model.SiteUser
-	rows, err := db.Queryx(query, args...)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	for rows.Next() {
-		var obj model.SiteUser
-		err = rows.StructScan(&obj)
-		if err != nil {
-			return nil, err
-		}
-		list = append(list, obj)
-	}
-	return list, nil
-}
-
 func UpsertItemGroup(ctx context.Context, db *sqlx.DB, obj model.ItemGroup) error {
 	stmt, err := db.PrepareNamedContext(ctx, "INSERT INTO ItemGroups VALUES (:ItemId,:GroupId,:Order,:CreatedAt,:CreatedBy,:LastUpdatedAt,:LastUpdatedBy) ON CONFLICT(ItemId,GroupId) DO UPDATE SET `ItemId`=excluded.`ItemId`,`GroupId`=excluded.`GroupId`,`Order`=excluded.`Order`,`CreatedAt`=excluded.`CreatedAt`,`CreatedBy`=excluded.`CreatedBy`,`LastUpdatedAt`=excluded.`LastUpdatedAt`,`LastUpdatedBy`=excluded.`LastUpdatedBy`")
 	if err != nil {
@@ -418,10 +564,48 @@ func UpsertItemGroupTx(ctx context.Context, tx *sqlx.Tx, obj model.ItemGroup) er
 	return err
 }
 
-func FindItemGroupByItemIdAndGroupId(ctx context.Context, db *sqlx.DB, keyItemId string, keyGroupId string) (*model.ItemGroup, error) {
-	obj := model.ItemGroup{}
+func DeleteItemGroupByItemIdAndGroupId(ctx context.Context, db *sqlx.DB, keyItemId string, keyGroupId string) error {
+	_, err := db.Exec("DELETE FROM ItemGroups WHERE ItemId=? AND GroupId=?", keyItemId, keyGroupId)
 
-	err := db.QueryRowx("SELECT * FROM ItemGroups WHERE ItemId=?AND GroupId=?", keyItemId, keyGroupId).StructScan(&obj)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func DeleteItemGroupByItemIdAndGroupIdTx(ctx context.Context, tx *sqlx.Tx, keyItemId string, keyGroupId string) error {
+	_, err := tx.Exec("DELETE FROM ItemGroups WHERE ItemId=? AND GroupId=?", keyItemId, keyGroupId)
+
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func ScanItemAssetList(ctx context.Context, db *sqlx.DB, query string, args ...interface{}) ([]model.ItemAsset, error) {
+	var list []model.ItemAsset
+	rows, err := db.Queryx(query, args...)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	for rows.Next() {
+		var obj model.ItemAsset
+		err = rows.StructScan(&obj)
+		if err != nil {
+			return nil, err
+		}
+		list = append(list, obj)
+	}
+	return list, nil
+}
+
+func FindItemAssetByItemIdAndAssetId(ctx context.Context, db *sqlx.DB, keyItemId string, keyAssetId string) (*model.ItemAsset, error) {
+	obj := model.ItemAsset{}
+
+	err := db.QueryRowx("SELECT * FROM ItemAssets WHERE ItemId=? AND AssetId=?", keyItemId, keyAssetId).StructScan(&obj)
 
 	if err != nil {
 		if err == sql.ErrNoRows {
@@ -432,25 +616,6 @@ func FindItemGroupByItemIdAndGroupId(ctx context.Context, db *sqlx.DB, keyItemId
 
 	return &obj, nil
 }
-
-func ScanItemGroupList(ctx context.Context, db *sqlx.DB, query string, args ...interface{}) ([]model.ItemGroup, error) {
-	var list []model.ItemGroup
-	rows, err := db.Queryx(query, args...)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	for rows.Next() {
-		var obj model.ItemGroup
-		err = rows.StructScan(&obj)
-		if err != nil {
-			return nil, err
-		}
-		list = append(list, obj)
-	}
-	return list, nil
-}
-
 func UpsertItemAsset(ctx context.Context, db *sqlx.DB, obj model.ItemAsset) error {
 	stmt, err := db.PrepareNamedContext(ctx, "INSERT INTO ItemAssets VALUES (:ItemId,:AssetId,:Order,:CreatedAt,:CreatedBy,:LastUpdatedAt,:LastUpdatedBy) ON CONFLICT(ItemId,AssetId) DO UPDATE SET `ItemId`=excluded.`ItemId`,`AssetId`=excluded.`AssetId`,`Order`=excluded.`Order`,`CreatedAt`=excluded.`CreatedAt`,`CreatedBy`=excluded.`CreatedBy`,`LastUpdatedAt`=excluded.`LastUpdatedAt`,`LastUpdatedBy`=excluded.`LastUpdatedBy`")
 	if err != nil {
@@ -479,35 +644,22 @@ func UpsertItemAssetTx(ctx context.Context, tx *sqlx.Tx, obj model.ItemAsset) er
 	return err
 }
 
-func FindItemAssetByItemIdAndAssetId(ctx context.Context, db *sqlx.DB, keyItemId string, keyAssetId string) (*model.ItemAsset, error) {
-	obj := model.ItemAsset{}
-
-	err := db.QueryRowx("SELECT * FROM ItemAssets WHERE ItemId=?AND AssetId=?", keyItemId, keyAssetId).StructScan(&obj)
+func DeleteItemAssetByItemIdAndAssetId(ctx context.Context, db *sqlx.DB, keyItemId string, keyAssetId string) error {
+	_, err := db.Exec("DELETE FROM ItemAssets WHERE ItemId=? AND AssetId=?", keyItemId, keyAssetId)
 
 	if err != nil {
-		if err == sql.ErrNoRows {
-			return nil, nil
-		}
-		return nil, err
+		return err
 	}
 
-	return &obj, nil
+	return nil
 }
 
-func ScanItemAssetList(ctx context.Context, db *sqlx.DB, query string, args ...interface{}) ([]model.ItemAsset, error) {
-	var list []model.ItemAsset
-	rows, err := db.Queryx(query, args...)
+func DeleteItemAssetByItemIdAndAssetIdTx(ctx context.Context, tx *sqlx.Tx, keyItemId string, keyAssetId string) error {
+	_, err := tx.Exec("DELETE FROM ItemAssets WHERE ItemId=? AND AssetId=?", keyItemId, keyAssetId)
+
 	if err != nil {
-		return nil, err
+		return err
 	}
-	defer rows.Close()
-	for rows.Next() {
-		var obj model.ItemAsset
-		err = rows.StructScan(&obj)
-		if err != nil {
-			return nil, err
-		}
-		list = append(list, obj)
-	}
-	return list, nil
+
+	return nil
 }

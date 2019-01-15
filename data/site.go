@@ -20,10 +20,6 @@ type SiteResult struct {
 	Data *Site `json:"data"`
 }
 
-func UnexpectedErrorSiteResult(err error) SiteResult {
-	return SiteResult{GenericResult: GenericErrorMessage(fmt.Sprintf("Unexpected error %s", err))}
-}
-
 func ItemsFromSite(ctx context.Context, db *sqlx.DB, site Site) ([]Item, error) {
 	return repository.ScanItemList(ctx, db, "SELECT I.* FROM Items I WHERE I.SiteId=?", site.Id)
 }
@@ -41,7 +37,7 @@ func QueryGetSites(ctx context.Context, db *sqlx.DB) ([]Site, error) {
 }
 
 func QueryGetSite(ctx context.Context, db *sqlx.DB, siteId string) (*Site, error) {
-	validated, err := assertUserHasAccessToSite(ctx, db, siteId)
+	validated, err := assertContextUserHasAccessToSite(ctx, db, siteId)
 	if err != nil {
 		return nil, err
 	}
@@ -57,16 +53,16 @@ func QueryGetSite(ctx context.Context, db *sqlx.DB, siteId string) (*Site, error
 }
 
 func MutationDeleteSite(ctx context.Context, db *sqlx.DB, siteId string) (GenericResult, error) {
-	if validated, err := assertUserHasAccessToSite(ctx, db, siteId); validated == false || err != nil {
+	if validated, err := assertContextUserHasAccessToSite(ctx, db, siteId); validated == false || err != nil {
 		if err != nil {
 			log.Printf("%s", err)
 		}
-		return GenericErrorMessage(UnauthenticatedMsg), nil
+		return ErrorGenericResult(UnauthenticatedMsg), nil
 	}
 
-	_, err := db.Exec("DELETE FROM Sites WHERE Id=?", siteId)
+	err := repository.DeleteSiteById(ctx, db, siteId)
 	if err != nil {
-		return GenericErrorMessage(fmt.Sprintf("Error: %s", err)), nil
+		return ErrorGenericResult(fmt.Sprintf("Error: %s", err)), nil
 	}
 	return GenericSuccess(), nil
 }
@@ -88,7 +84,7 @@ func MutationUpsertSite(ctx context.Context, db *sqlx.DB, input SiteInput) (Site
 		return UnexpectedErrorSiteResult(err), nil
 	}
 	if user == nil {
-		return SiteResult{GenericResult: GenericErrorMessage(UnauthenticatedMsg)}, nil
+		return SiteResult{GenericResult: ErrorGenericResult(UnauthenticatedMsg)}, nil
 	}
 
 	if input.ID == nil {
@@ -97,7 +93,7 @@ func MutationUpsertSite(ctx context.Context, db *sqlx.DB, input SiteInput) (Site
 			Id:          generateId(),
 			Name:        input.Name,
 			Data:        input.Data,
-			AuditFields: CreateAuditFields(ctx, nil),
+			AuditFields: CreateAuditFields(ctx),
 		}
 	} else {
 		// otherwise, we need to do some validations...
@@ -108,20 +104,20 @@ func MutationUpsertSite(ctx context.Context, db *sqlx.DB, input SiteInput) (Site
 			return UnexpectedErrorSiteResult(err), nil
 		}
 		if existingSite == nil {
-			return SiteResult{GenericResult: GenericErrorMessage(fmt.Sprintf("Site %s does not exist", *input.ID))}, nil
+			return SiteResult{GenericResult: ErrorGenericResult(fmt.Sprintf("Site %s does not exist", *input.ID))}, nil
 		}
-		validated, err := assertUserHasAccessToSite(ctx, db, existingSite.Id)
+		validated, err := assertContextUserHasAccessToSite(ctx, db, existingSite.Id)
 		if err != nil {
 			return UnexpectedErrorSiteResult(err), nil
 		}
 		if validated == false {
-			return SiteResult{GenericResult: GenericErrorMessage(UnauthenticatedMsg)}, nil
+			return SiteResult{GenericResult: ErrorGenericResult(UnauthenticatedMsg)}, nil
 		}
 		site = Site{
 			Id:          *input.ID,
 			Name:        input.Name,
 			Data:        input.Data,
-			AuditFields: CreateAuditFields(ctx, &existingSite.AuditFields),
+			AuditFields: CreateAuditFieldsFromExisting(ctx, existingSite.AuditFields),
 		}
 	}
 
@@ -136,7 +132,7 @@ func MutationUpsertSite(ctx context.Context, db *sqlx.DB, input SiteInput) (Site
 		UserId:      user.Id,
 		SiteId:      site.Id,
 		Order:       0,
-		AuditFields: CreateAuditFields(ctx, nil),
+		AuditFields: CreateAuditFields(ctx),
 	}
 	err = repository.UpsertSiteUserTx(ctx, tx, siteUser)
 	if err != nil {

@@ -59,7 +59,12 @@ func (r *mutationResolver) AddUserToSite(ctx context.Context, userId string, sit
 	defer func() {
 		if r := recover(); r != nil {
 			log.Printf("%s %s", r, debug.Stack())
-			res = GenericError()
+			rAsError, ok := r.(error)
+			if ok {
+				res = UnexpectedErrorGenericResult(rAsError)
+			} else {
+				res = ErrorGenericResult("Unexpected error")
+			}
 		}
 	}()
 	res, err = MutationAddUserToSite(ctx, r.DB, userId, siteId)
@@ -69,7 +74,12 @@ func (r *mutationResolver) DeleteAsset(ctx context.Context, assetId string) (res
 	defer func() {
 		if r := recover(); r != nil {
 			log.Printf("%s %s", r, debug.Stack())
-			res = GenericError()
+			rAsError, ok := r.(error)
+			if ok {
+				res = UnexpectedErrorGenericResult(rAsError)
+			} else {
+				res = ErrorGenericResult("Unexpected error")
+			}
 		}
 	}()
 	res, err = MutationDeleteAsset(ctx, r.DB, assetId)
@@ -79,7 +89,12 @@ func (r *mutationResolver) DeleteItem(ctx context.Context, itemId string) (res G
 	defer func() {
 		if r := recover(); r != nil {
 			log.Printf("%s %s", r, debug.Stack())
-			res = GenericError()
+			rAsError, ok := r.(error)
+			if ok {
+				res = UnexpectedErrorGenericResult(rAsError)
+			} else {
+				res = ErrorGenericResult("Unexpected error")
+			}
 		}
 	}()
 	res, err = MutationDeleteItem(ctx, r.DB, itemId)
@@ -89,7 +104,12 @@ func (r *mutationResolver) DeleteSite(ctx context.Context, siteId string) (res G
 	defer func() {
 		if r := recover(); r != nil {
 			log.Printf("%s %s", r, debug.Stack())
-			res = GenericError()
+			rAsError, ok := r.(error)
+			if ok {
+				res = UnexpectedErrorGenericResult(rAsError)
+			} else {
+				res = ErrorGenericResult("Unexpected error")
+			}
 		}
 	}()
 	res, err = MutationDeleteSite(ctx, r.DB, siteId)
@@ -99,7 +119,12 @@ func (r *mutationResolver) Login(ctx context.Context, login LoginInput) (res Log
 	defer func() {
 		if r := recover(); r != nil {
 			log.Printf("%s %s", r, debug.Stack())
-			res = LoginResult{GenericResult: GenericError()}
+			rAsError, ok := r.(error)
+			if ok {
+				res = UnexpectedErrorLoginResult(rAsError)
+			} else {
+				res = ErrorLoginResult("Unexpected error")
+			}
 		}
 	}()
 	res, err = Login(ctx, r.DB, login)
@@ -109,7 +134,12 @@ func (r *mutationResolver) Register(ctx context.Context, registration RegisterIn
 	defer func() {
 		if r := recover(); r != nil {
 			log.Printf("%s %s", r, debug.Stack())
-			res = UserResult{GenericResult: GenericError()}
+			rAsError, ok := r.(error)
+			if ok {
+				res = UnexpectedErrorUserResult(rAsError)
+			} else {
+				res = ErrorUserResult("Unexpected error")
+			}
 		}
 	}()
 	res, err = MutationRegister(ctx, r.DB, registration)
@@ -119,7 +149,12 @@ func (r *mutationResolver) UpdateUser(ctx context.Context, user UserInput) (res 
 	defer func() {
 		if r := recover(); r != nil {
 			log.Printf("%s %s", r, debug.Stack())
-			res = UserResult{GenericResult: GenericError()}
+			rAsError, ok := r.(error)
+			if ok {
+				res = UnexpectedErrorUserResult(rAsError)
+			} else {
+				res = ErrorUserResult("Unexpected error")
+			}
 		}
 	}()
 	res, err = MutationUpdateUser(ctx, r.DB, user)
@@ -129,7 +164,12 @@ func (r *mutationResolver) UpsertItem(ctx context.Context, item ItemInput, siteI
 	defer func() {
 		if r := recover(); r != nil {
 			log.Printf("%s %s", r, debug.Stack())
-			res = ItemResult{GenericResult: GenericError()}
+			rAsError, ok := r.(error)
+			if ok {
+				res = UnexpectedErrorItemResult(rAsError)
+			} else {
+				res = ErrorItemResult("Unexpected error")
+			}
 		}
 	}()
 	res, err = MutationUpsertItem(ctx, r.DB, item, siteId)
@@ -139,7 +179,12 @@ func (r *mutationResolver) UpsertSite(ctx context.Context, site SiteInput) (res 
 	defer func() {
 		if r := recover(); r != nil {
 			log.Printf("%s %s", r, debug.Stack())
-			res = SiteResult{GenericResult: GenericError()}
+			rAsError, ok := r.(error)
+			if ok {
+				res = UnexpectedErrorSiteResult(rAsError)
+			} else {
+				res = ErrorSiteResult("Unexpected error")
+			}
 		}
 	}()
 	res, err = MutationUpsertSite(ctx, r.DB, site)
