@@ -6,13 +6,14 @@ import (
 	"github.com/deslee/cms/data"
 	"github.com/jmoiron/sqlx"
 	_ "github.com/mattn/go-sqlite3"
+	"github.com/rs/cors"
 	"log"
 	"net/http"
 	"os"
 	"strings"
 )
 
-const defaultPort = "8080"
+const defaultPort = "3000"
 
 func main() {
 	port := os.Getenv("PORT")
@@ -26,15 +27,16 @@ func main() {
 	}
 
 	data.CreateTablesAndIndicesIfNotExist(db)
+	withCors := cors.AllowAll().Handler
 
 	http.Handle("/", handler.Playground("GraphQL playground", "/query"))
 	http.Handle(
 		"/query",
-		withAuth(handler.GraphQL(cms.NewExecutableSchema(cms.Config{Resolvers: &cms.Resolver{DB: db}}))),
+		withCors(withAuth(handler.GraphQL(cms.NewExecutableSchema(cms.Config{Resolvers: &cms.Resolver{DB: db}})))),
 	)
 	http.Handle(
 		"/graphql",
-		withAuth(handler.GraphQL(cms.NewExecutableSchema(cms.Config{Resolvers: &cms.Resolver{DB: db}}))),
+		withCors(withAuth(handler.GraphQL(cms.NewExecutableSchema(cms.Config{Resolvers: &cms.Resolver{DB: db}})))),
 	)
 
 	log.Printf("connect to http://localhost:%s/ for GraphQL playground", port)
