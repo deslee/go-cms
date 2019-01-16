@@ -60,6 +60,17 @@ func (asset Asset) FileName() string {
 	}
 }
 
+func (asset Asset) Key() string {
+	data := deserialize(asset.Data)
+	originalFilename, ok := data["key"].(string)
+	if ok {
+		return originalFilename
+	} else {
+		log.Printf("Data.key is not a string! it is: %s", data["key"])
+		return ""
+	}
+}
+
 func (asset Asset) Extension() string {
 	data := deserialize(asset.Data)
 	extension, ok := data["extension"].(string)

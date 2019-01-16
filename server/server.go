@@ -53,6 +53,13 @@ func main() {
 	)
 
 	http.Handle(
+		"/asset/",
+		withCors(
+			http.HandlerFunc(viewAssetHandler),
+		),
+	)
+
+	http.Handle(
 		"/uploadAsset",
 		withCors(
 			withAuth(
@@ -65,9 +72,112 @@ func main() {
 	log.Fatal(http.ListenAndServe(":"+port, nil))
 }
 
+func viewAssetHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method != "GET" {
+		w.WriteHeader(http.StatusNotFound)
+		return
+	}
+
+	// get the id from the route
+	routeSegments := strings.SplitN(r.URL.Path, "/asset/", 2)
+	if len(routeSegments) != 2 {
+		w.WriteHeader(http.StatusNotFound)
+		return
+	}
+	id := routeSegments[1]
+
+	// find the asset by id
+	asset, err := repository.FindAssetById(r.Context(), db, id)
+	if err != nil {
+		fmt.Printf("%s\n", err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	if asset == nil {
+		w.WriteHeader(http.StatusNotFound)
+		return
+	}
+
+	// deserialize the data part of the asset
+	var d interface{}
+	err = json.Unmarshal([]byte(asset.Data), &d)
+	if err != nil {
+		fmt.Printf("%s\n", err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	data, ok := d.(map[string]interface{})
+	if !ok {
+		fmt.Printf("%s\n", err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+
+	// construct the filename
+	fileName := asset.Key()
+	if len(fileName) == 0 {
+		w.WriteHeader(http.StatusNotFound)
+		return
+	}
+
+	// get the size
+	size := r.URL.Query().Get("w")
+	if len(size) != 0 {
+		// if a size is requested, get the sizeKeyMap from the asset data
+		dataSizes, ok := data["sizes"]
+		if !ok {
+			w.WriteHeader(http.StatusNotFound)
+			return
+		}
+		sizeKeyMap, ok := dataSizes.(map[string]interface{})
+		if !ok {
+			fmt.Printf("%s\n", err)
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+		// get the filename out of the sizeKeyMap
+		fileNameData := sizeKeyMap[size]
+		fileName, ok = fileNameData.(string)
+		if !ok {
+			fmt.Printf("%s\n", err)
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+	}
+
+	// get the file
+	file, err := os.Open(fmt.Sprintf("./assets/%s", fileName))
+	if err != nil {
+		if os.IsNotExist(err) {
+			w.WriteHeader(http.StatusNotFound)
+			return
+		}
+
+		fmt.Printf("%s\n", err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	_, err = io.Copy(w, file)
+	if err != nil {
+		fmt.Printf("%s\n", err)
+		w.WriteHeader(http.StatusInternalServerError)
+	} else {
+		w.WriteHeader(200)
+		w.Header().Set("Content-Type", asset.Type)
+	}
+}
+
 func uploadAssetHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method != "POST" {
+		w.WriteHeader(http.StatusNotFound)
+		return
+	}
+
 	file, header, err := r.FormFile("file")
 	if err != nil {
+		fmt.Printf("%s\n", err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
@@ -82,6 +192,7 @@ func uploadAssetHandler(w http.ResponseWriter, r *http.Request) {
 	// validate
 	hasAccess, err := data.AssertContextUserHasAccessToSite(r.Context(), db, siteId)
 	if err != nil {
+		fmt.Printf("%s\n", err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
@@ -96,15 +207,26 @@ func uploadAssetHandler(w http.ResponseWriter, r *http.Request) {
 	id := data.GenerateId()
 	savedFilename := fmt.Sprintf("%s%s", id, extension)
 
+	// ensure asset directory exists
+	if _, err := os.Stat("./assets"); os.IsNotExist(err) {
+		if err == os.Mkdir("./assets", os.ModePerm) {
+			fmt.Printf("%s\n", err)
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+	}
+
 	// save asset to directory
 	f, err := os.Create(fmt.Sprintf("./assets/%s", savedFilename))
 	if err != nil {
+		fmt.Printf("%s\n", err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 	defer f.Close()
 	_, err = io.Copy(f, file)
 	if err != nil {
+		fmt.Printf("%s\n", err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
@@ -120,6 +242,7 @@ func uploadAssetHandler(w http.ResponseWriter, r *http.Request) {
 
 	err = repository.UpsertAsset(r.Context(), db, asset)
 	if err != nil {
+		fmt.Printf("%s\n", err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
@@ -127,6 +250,7 @@ func uploadAssetHandler(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 	serialized, err := json.Marshal(asset)
 	if err != nil {
+		fmt.Printf("%s\n", err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
