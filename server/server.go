@@ -24,6 +24,7 @@ const defaultPort = "3000"
 var db *sqlx.DB
 
 func main() {
+
 	port := os.Getenv("PORT")
 	if port == "" {
 		port = defaultPort
@@ -106,7 +107,7 @@ func viewAssetHandler(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
-	data, ok := d.(map[string]interface{})
+	assetData, ok := d.(map[string]interface{})
 	if !ok {
 		fmt.Printf("%s\n", err)
 		w.WriteHeader(http.StatusInternalServerError)
@@ -125,7 +126,7 @@ func viewAssetHandler(w http.ResponseWriter, r *http.Request) {
 	size := r.URL.Query().Get("w")
 	if len(size) != 0 {
 		// if a size is requested, get the sizeKeyMap from the asset data
-		dataSizes, ok := data["sizes"]
+		dataSizes, ok := assetData["sizes"]
 		if !ok {
 			w.WriteHeader(http.StatusNotFound)
 			return
@@ -148,6 +149,7 @@ func viewAssetHandler(w http.ResponseWriter, r *http.Request) {
 
 	// get the file
 	file, err := os.Open(fmt.Sprintf("./assets/%s", fileName))
+	defer file.Close()
 	if err != nil {
 		if os.IsNotExist(err) {
 			w.WriteHeader(http.StatusNotFound)
@@ -246,15 +248,28 @@ func uploadAssetHandler(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
 	serialized, err := json.Marshal(asset)
 	if err != nil {
 		fmt.Printf("%s\n", err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
+
+	// really make sure we have the data on disk
+	err = f.Sync()
+	if err == nil {
+		fmt.Printf("%s\n", err)
+		w.WriteHeader(http.StatusInternalServerError)
+	}
+
 	_, err = w.Write(serialized)
+	if err == nil {
+		fmt.Printf("%s\n", err)
+		w.WriteHeader(http.StatusInternalServerError)
+	} else {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+	}
 }
 
 func withAuth(next http.Handler) http.Handler {

@@ -49,6 +49,7 @@ func deserialize(jsonString string) map[string]interface{} {
 	}
 }
 
+// original filename. this is what the user sees
 func (asset Asset) FileName() string {
 	data := deserialize(asset.Data)
 	originalFilename, ok := data["originalFilename"].(string)
@@ -60,6 +61,7 @@ func (asset Asset) FileName() string {
 	}
 }
 
+// filename saved to disk
 func (asset Asset) Key() string {
 	data := deserialize(asset.Data)
 	originalFilename, ok := data["key"].(string)
